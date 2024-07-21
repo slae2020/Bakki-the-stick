@@ -10,8 +10,11 @@ shopt -s extglob
 ### "0.82" # slae 2021-02-07
 ### "0.9" # slae 2022-02-10 mit iserv & sudo-mount
 ### "0.91" # slae 2023-10 iserv.ausdruck & abf<->unt ergaenzt
+### "0.92" # slae 2024-03 unt verschoben nach slae_unt
+
+
 eintraege="SLAE01 usrIserv untIserv ausdruck ABFUNT SLAE03 KeePass KIMocloud meld"
-version="0.92" # slae 2024-03 unt verschoben nach slae_unt
+version="1.00" # slae 2024-07 Start mit git
 
 # nächstes ocloud ?  Auswahl für verschiedene Ordner auf iserv?
 
