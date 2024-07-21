@@ -4,8 +4,6 @@ shopt -s extglob
 eintraege="SLAE01 usrIserv untIserv ausdruck ABFUNT SLAE03 KeePass KIMocloud meld"
 version="1.00" # slae 2024-07 Start mit git
 
-# nächstes ocloud ?  Auswahl für verschiedene Ordner auf iserv?
-
 #################
 title="Starter BK"
 text="Meld-Vergleich auswählen"
