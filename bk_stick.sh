@@ -1,18 +1,6 @@
 #!/bin/bash
 shopt -s extglob
 
-#################
-### old eintraege="KIM kigapub_kiga kigafin rot_kiga alle_drei rsync_push meld"
-### "0.6" # slae 2018-03-03
-### "0.7" # slae 2018-11-27
-### "0.8" # slae 2019-05-24
-### "0.81" # slae 2020-11-14
-### "0.82" # slae 2021-02-07
-### "0.9" # slae 2022-02-10 mit iserv & sudo-mount
-### "0.91" # slae 2023-10 iserv.ausdruck & abf<->unt ergaenzt
-### "0.92" # slae 2024-03 unt verschoben nach slae_unt
-
-
 eintraege="SLAE01 usrIserv untIserv ausdruck ABFUNT SLAE03 KeePass KIMocloud meld"
 version="1.00" # slae 2024-07 Start mit git
 
@@ -120,38 +108,3 @@ esac
 
 exit 0
 
-## old stuff
-
-alle_drei)
-		## Stick drin ?
-		ls -a /media/ROT_8GB/* >/dev/null 2>&1
-		while [ $? != 0 ] # Fenster wiederholen bis gefunden oder Abbruch
-		do
-			zenity --question --title="$title" --width="350" --text="Stick fehlt! \nNoch einen Versuch ?" \
-			--window-icon=$HOME/.icons/elementary/status/48/important.svg
-			if  [ $? != 0 ]; then
-				exit 1
-			fi
-			[ $? -ne 0 ] && exit 2 # Abbruch
-			ls -a /media/ROT_8GB/* >/dev/null 2>&1
-		done
-		meld /media/ROT_8GB/kiga /home/stefan/kigapub ~/kiga
-		;;
-
-#gemountet ?
-ans="`truecrypt -t -l | sed -e s/" \/[^home]".*$//`"
-if [ "$ans" != "" ]
-then 
-	zenity --question --title="$title" --width="350" --text="   Gefundenes Volume:\n$ans\n\n   Ist das richtig ?"
-	if [ $? != 0 ]
-	then
-	truecrypt -d
-	truecrypt --auto-mount=favorites --load-preferences
-	fi
-else
-	truecrypt --auto-mount=favorites --load-preferences
-fi
-
-#meld
-#meld /media/ROT_8GB/kiga /home/stefan/kiga /home/stefan/clark/kiga
-#meld ~/kigapub ~/kiga
