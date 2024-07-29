@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bk-script_options>
+	<general>
+		<version>1.1</version>	
+		<versionstxt>mit config.xml-Datei</versionstxt>
+		<title>"Starter BK"</title>
+		<text>"Meld-Vergleich auswählen (v$version)"</text>
+		<config>"Einstellungen"</config>
+	</general>
+	<directories>
+		<stickort>"/media/stefan"</stickort>
+	</directories>
+<food>
+    <name>Belgian Waffles</name>
+    <price>$5.95</price>
+    <description>
+   Two of our famous Belgian Waffles with plenty of real maple syrup
+   </description>
+    <calories>650</calories>
+</food>
+</bk-script_options>
+<!-- Ende des XML-Dokumentes -->
