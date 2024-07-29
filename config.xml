@@ -8,8 +8,11 @@
 		<config>"Einstellungen"</config>
 	</general>
 	<directories>
-		<stickort>"/media/stefan"</stickort>
+		<stickort>/media/stefan</stickort>
+		<StdVerz>/slaekim</StdVerz>
+		<RemoteOrt>/mnt/iserv_laettig/Files</RemoteOrt>
 	</directories>
+<<<<<<< HEAD
 <food>
     <name>Belgian Waffles</name>
     <price>$5.95</price>
@@ -20,3 +23,51 @@
 </food>
 </bk-script_options>
 <!-- Ende des XML-Dokumentes -->
+=======
+	<vergleiche>
+		<ordpaar>
+		<name>test</name>
+		<dir1>~/prog/as</dir1>
+		<dir2>/home/woher/</dir2>
+		</ordpaar>
+		<ordpaar>
+		<name>test2</name>
+		<dir1>~/slae_kim/usr</dir1>
+		<dir2>/home/woher/</dir2>
+		</ordpaar>
+		<ordpaar>
+		<name>SLAE01_#0</name>
+		<dir1>/home/stefan/slae_kim</dir1>
+
+		<dir2>$stickort/SLAE01$StdVerz</dir2>
+
+<!--
+		<dir2>/media/stefan/SLAE01/slaekim</dir2>
+-->
+		</ordpaar>
+		<ordpaar>
+		<name>SLAE03_#5</name>
+		<dir1>/home/stefan/slae_kim</dir1>
+		<dir2>$stickort/SLAE03$StdVerz</dir2>
+		</ordpaar>	
+		<ordpaar>
+		<name>iservUSR_#1</name>
+		<dir1>/home/stefan/slae_kim/usr</dir1>
+		<dir2>$RemoteOrt/usr</dir2>
+		</ordpaar>
+		<ordpaar>
+		<name>Keepass_#6</name>
+		<dir1>/home/stefan/.door3</dir1>
+		<dir2>$RemoteOrt/kp/myt</dir2>
+		</ordpaar>
+		<ordpaar>
+		<name>meld_#10</name>
+		<dir1></dir1>
+		<dir2></dir2>
+		</ordpaar>
+	</vergleiche>
+
+</bk-script_options>
+<!-- Ende des XML-Dokumentes -->
+<!-- keine Lücken im Namen ; keine ~/ in Verzeichnissen -->
+>>>>>>> cf06b07 (Mo Pause 2)
