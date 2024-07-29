@@ -1,31 +1,45 @@
 #!/bin/bash
 shopt -s extglob
 
-#eintraege="SLAE01 usrIserv untIserv ausdruck ABFUNT SLAE03 KeePass KIMocloud meld hier3Test"
-#################
-#Liste der möglichen Vergleiche (Ordner)
+################# Liste der möglichen Vergleiche (Ordner)
 options=("SLAE01")   							#0
 options+=("usrIserv" "untIserv" "ausdruck")    	#1-3
 options+=("ABFUNT"   "SLAE03" "KeePass") 		#4-6
 options+=("KIMocloud" "dokumente" "??#1") 		#7-9
-options+=("meld"  "rsync_push") 		#10-12
-
-		 
-#nur hier eintraeg editieren, dann automatisch unten? eintraege[12] ?
+options+=("meld"  "rsync_push" "~/slae_kim/usr") 				#10-12
+	 
 version="1.00" # slae 2024-07 Start mit git
+version=$(xml_grep 'version' config.xml --text_only)
+ee=$(xml_grep 'versionstxt' config.xml --text_only)
 
-#################
-title="Starter BK"
-text="Meld-Vergleich auswählen"
-config="Einstellungen"
-stickort="/media/stefan"
+################# 
+title=$(xml_grep 'title' config.xml --text_only)
+text=$(xml_grep 'text' config.xml --text_only)
+config=$(xml_grep 'config' config.xml --text_only)
+stickort=$(xml_grep 'stickort' config.xml --text_only)
+scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-#################
-echo -e "Starte..........\n"
+################# Start
 
-#echo ${options[9]}
+### fct alle Optionen zur Auswahl anzeigen/ Testoption
+ZeigeOptionen () {
+	#echo ${#options[*]}
+	for ((k = 0 ; k < ${#options[@]} ; k++)); do 
+		echo $k"-->"${options[k]}
+	done
+	echo .
+	echo $auswahl
+	#echo ${options[8]}
+	echo .	
+	
+	echo $(xml_grep 'version' config.xml --text_only)
 
-### function  Stick drin ?
+#	echo $scriptort
+#	echo "$0"         #scriptname
+}
+###
+
+### fct  Stick drin ?
 eingesteckt ( ) {
 		ls -a "$stickort/"$1"/slaekim/" >/dev/null 2>&1
 		while [ $? != 0 ] # Fenster wiederholen bis gefunden oder Abbruch
@@ -40,7 +54,7 @@ eingesteckt ( ) {
 }
 ###
 
-### function Netzlaufwerk verbunden ?
+### fct Netzlaufwerk verbunden ?
 verbunden ( ) {
 		lw=$1"Files" #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
 #echo $lw
@@ -57,13 +71,13 @@ verbunden ( ) {
 }	
 
 ######## Hauptfenster ########
-#--list --column="Eintraege"	$eintraege $config \
+echo -e "Starte..........\n" # Testoption
+ZeigeOptionen # Testoption
 
-while [ ! "$auswahl" ] # Wiederanzeige bis Auswahl
-do
+while [ ! "$auswahl" ]; do       # Wiederanzeige bis Auswahl
 	auswahl=`zenity --height "350" --width "450" \
 	--title "$title" --text "$text" \
-	--list --column="Eintraege"	${options[*]} $config \
+	--list --column="Optionen"	${options[*]} $config \
 	` 	
 	###### gewaehlt -> abgang ######
 	if  [ $? != 0 ]; then
@@ -72,15 +86,6 @@ do
 	[ $? -ne 0 ] && exit 2 # Abbruch
 done
 
-#echo ${options[*]}
-for ((k = 0 ; k < 10 ; k++)); do 
-	echo $k"-->"${options[k]}
-done
-echo .
-echo $auswahl
-#echo ${options[8]}
-echo .
-
 #### Aufruf ####
 case $auswahl in
 	#${options[0etc]})  # für alle slae01 bis SLAE99 ; nur ALLEGROSS oder alleklein
@@ -88,7 +93,7 @@ case $auswahl in
 		eingesteckt $auswahl
 		meld ~/slae_kim "$stickort/"$auswahl"/slaekim"
 		;;
-	${options[1]})  #	usrIserv)  #usr
+	${options[1]}|${options[12]})  #	usrIserv)  #usr
 	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  /home/stefan/slae_kim/usr "/mnt/iserv_laettig/Files/usr"
 		;;	
@@ -128,7 +133,7 @@ case $auswahl in
 		;;
 
 	$config)
-		geany ~/perl/bk_stick.sh
+		geany "$scriptort${0:1}"
 		;;
 	*) # caseelse
 	
