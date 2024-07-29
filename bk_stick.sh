@@ -1,7 +1,17 @@
 #!/bin/bash
 shopt -s extglob
 
-eintraege="SLAE01 usrIserv untIserv ausdruck ABFUNT SLAE03 KeePass KIMocloud meld"
+#eintraege="SLAE01 usrIserv untIserv ausdruck ABFUNT SLAE03 KeePass KIMocloud meld hier3Test"
+#################
+#Liste der möglichen Vergleiche (Ordner)
+options=("SLAE01")   							#0
+options+=("usrIserv" "untIserv" "ausdruck")    	#1-3
+options+=("ABFUNT"   "SLAE03" "KeePass") 		#4-6
+options+=("KIMocloud" "dokumente" "??#1") 		#7-9
+options+=("meld"  "rsync_push") 		#10-12
+
+		 
+#nur hier eintraeg editieren, dann automatisch unten? eintraege[12] ?
 version="1.00" # slae 2024-07 Start mit git
 
 #################
@@ -11,7 +21,9 @@ config="Einstellungen"
 stickort="/media/stefan"
 
 #################
-# echo -e "Starte..........\n"
+echo -e "Starte..........\n"
+
+#echo ${options[9]}
 
 ### function  Stick drin ?
 eingesteckt ( ) {
@@ -45,11 +57,13 @@ verbunden ( ) {
 }	
 
 ######## Hauptfenster ########
+#--list --column="Eintraege"	$eintraege $config \
+
 while [ ! "$auswahl" ] # Wiederanzeige bis Auswahl
 do
-	auswahl=`zenity --height "250" --width "450" \
+	auswahl=`zenity --height "350" --width "450" \
 	--title "$title" --text "$text" \
-	--list --column="Eintraege"	$eintraege $config \
+	--list --column="Eintraege"	${options[*]} $config \
 	` 	
 	###### gewaehlt -> abgang ######
 	if  [ $? != 0 ]; then
@@ -58,44 +72,61 @@ do
 	[ $? -ne 0 ] && exit 2 # Abbruch
 done
 
-#echo Klll
-#echo $auswahl
-#echo .
+#echo ${options[*]}
+for ((k = 0 ; k < 10 ; k++)); do 
+	echo $k"-->"${options[k]}
+done
+echo .
+echo $auswahl
+#echo ${options[8]}
+echo .
 
 #### Aufruf ####
 case $auswahl in
-	+([slae|SLAE])??) #für alle slae01 bsi SLAE99
+	#${options[0etc]})  # für alle slae01 bis SLAE99 ; nur ALLEGROSS oder alleklein
+	+([slae|SLAE])??) 
 		eingesteckt $auswahl
 		meld ~/slae_kim "$stickort/"$auswahl"/slaekim"
 		;;
-	KeePass)
-		verbunden "/mnt/iserv_laettig/"     # erst mounten!
-		meld  ~/.door3 "/mnt/iserv_laettig/Files/kp/myt"
-		;;
-	KIMocloud)
-## für slaekim?!?	über nextcloud-app...
-		;;
-	usrIserv)  #usr
+	${options[1]})  #	usrIserv)  #usr
 	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  /home/stefan/slae_kim/usr "/mnt/iserv_laettig/Files/usr"
 		;;	
-	untIserv)  #unt
+	${options[2]})  #	untIserv)  #unt
 	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  /home/stefan/slae_unt "/mnt/iserv_laettig/Files/unt"
 		;;	
-	ausdruck)  #drucken
+	${options[3]})  #	ausdruck)  #drucken
 	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  /home/stefan/slae_kim/ausdruck "/mnt/iserv_laettig/Files/ausdruck"
 		;;	
-	ABFUNT) #ab nach unt shuffeln
+	${options[4]})  #	ABFUNT) #ab nach unt shuffeln
 		meld  /home/stefan/slae_kim/abf "/home/stefan/slae_unt"		
 		;;
-	rsync_push)	
-		~/perl/rsync_push.sh
-		;;
-	meld)
+	#${options[5]})  #	SLAE03
+	${options[6]})  #	KeePass)  #6
+		verbunden "/mnt/iserv_laettig/"     # erst mounten!
+		meld  ~/.door3 "/mnt/iserv_laettig/Files/kp/myt"
+		;;		
+	${options[7]})  #	KIMocloud)
+
+## für slaekim?!?	über nextcloud-app...
+		;;		
+	${options[8]})  #	dokumente)
+## tbd erst abfragen ob Verbindung afp (oder mnt) ?
+	# 	meld /home/stefan/dokumente  "afp://stefan@willem.local/francois3/dokumente"
+	    ;;		
+	${options[9]})   #   ??#1
+		echo "Heureka!"
+		;;	
+	${options[10]})  #	meld)
 		meld
 		;;
+	${options[11]})  #	rsync_push)	
+		#~/perl/rsync_push.sh
+		echo "tbd"
+		;;
+
 	$config)
 		geany ~/perl/bk_stick.sh
 		;;
