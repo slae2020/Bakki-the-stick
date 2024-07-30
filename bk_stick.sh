@@ -1,43 +1,29 @@
 #!/bin/bash
 shopt -s extglob
-
-
-################# Liste der möglichen Vergleiche (Ordner)
-options=("SLAE01")   							#0
-options+=("usrIserv" "untIserv" "ausdruck")    	#1-3
-options+=("ABFUNT"   "SLAE03" "KeePass") 		#4-6
-options+=("KIMocloud" "dokumente" "??#1") 		#7-9
-options+=("meld"  "rsync_push" "~/slae_kim/usr") 				#10-12
 	 
-#version="1.00" # slae 2024-07 Start mit git
-version=$(xml_grep 'version' config.xml --text_only)
-#ee=$(xml_grep 'versionstxt' config.xml --text_only)
-
-################# 
-
 ## if $1 leer then ="config.xml" einbauen
-
 echo -e "Starte..........\n" # Testoption
+
+echo $1
+
+[[ -n "$1" ]] && c="$1" || c="config.xml"
+echo $c"<"
 
 ################# config einlesen
 version=$(xml_grep 'version' config.xml --text_only) && verstxt=$(xml_grep 'verstxt' config.xml --text_only)
+scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-title=$(xml_grep 'title' config.xml --text_only)
+title=$(xml_grep 'title' $c --text_only)
 text=$(xml_grep 'text' config.xml --text_only) && text=${text/\$version/$version} && text=${text/\$verstxt/$verstxt}   #gefällt mir nicht Name getname ??
 config=$(xml_grep 'config' config.xml --text_only)
 
-scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 homeVerz=$(xml_grep 'homeVerz' config.xml --text_only)
 stickort=$(xml_grep 'stickort' config.xml --text_only)
-
-scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
 StdVerz=$(xml_grep 'StdVerz' config.xml --text_only)
 RemoteOrt=$(xml_grep 'RemoteOrt' config.xml --text_only)
 
-
 ## Liste der möglichen Vergleiche (Ordner)
-	optName=("kw")   							#0
+	optName=("")   							#0
 	optName+=("kw" "KW" "KW")    	#1-3
 	optName+=("KW"   "KW" "kw") 		#4-6
 	optName+=("KIMocloud" "dokumente" "kw") 		#7-9
@@ -202,11 +188,11 @@ case $auswahl in
 	
 	${optName[$index]})  #	new aus config
 
-echo .
-echo "AAAA"
-echo $auswahl"<->"${optName[$index]}
-echo ">"${dir1[$index]}"<"
-echo ">"${dir2[$index]}"<"
+#echo .
+#echo "AAAA"
+#echo $auswahl"<->"${optName[$index]}
+#echo ">"${dir1[$index]}"<"
+#echo ">"${dir2[$index]}"<"
 
 		stringContain "/media/" "${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}" #in eine verbunden fct?
 
@@ -276,7 +262,7 @@ echo ">"${dir2[$index]}"<"
 		geany "$scriptort${0:1}"
 		;;
 	*) # caseelse
-echo "Fehler! else kw!"	
+echo "Fehler 77! (caseelse)"	
 		;;
 esac
 
