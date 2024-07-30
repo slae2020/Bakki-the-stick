@@ -1,6 +1,20 @@
 #!/bin/bash
 shopt -s extglob
 
+
+################# Liste der möglichen Vergleiche (Ordner)
+options=("SLAE01")   							#0
+options+=("usrIserv" "untIserv" "ausdruck")    	#1-3
+options+=("ABFUNT"   "SLAE03" "KeePass") 		#4-6
+options+=("KIMocloud" "dokumente" "??#1") 		#7-9
+options+=("meld"  "rsync_push" "~/slae_kim/usr") 				#10-12
+	 
+#version="1.00" # slae 2024-07 Start mit git
+version=$(xml_grep 'version' config.xml --text_only)
+#ee=$(xml_grep 'versionstxt' config.xml --text_only)
+
+################# 
+
 ## if $1 leer then ="config.xml" einbauen
 
 echo -e "Starte..........\n" # Testoption
@@ -15,8 +29,12 @@ config=$(xml_grep 'config' config.xml --text_only)
 scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 homeVerz=$(xml_grep 'homeVerz' config.xml --text_only)
 stickort=$(xml_grep 'stickort' config.xml --text_only)
+
+scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 StdVerz=$(xml_grep 'StdVerz' config.xml --text_only)
 RemoteOrt=$(xml_grep 'RemoteOrt' config.xml --text_only)
+
 
 ## Liste der möglichen Vergleiche (Ordner)
 	optName=("kw")   							#0
@@ -52,20 +70,27 @@ echo -e "eingelsen!\n" # Testoption
 
 ################# Start
 
-### fct alle Optionen zur Auswahl anzeigen/ Testoption
-ZeigeOptionen () {
-	echo -e ${#optName[*]}
+### 
+ZeigeOptionen () { #fct alle Optionen zur Auswahl anzeigen/ Testoption
+
+	#echo ${#options[*]}
+	#for ((k = 0 ; k < ${#options[@]} ; k++)); do 
+		#echo $k"-->"${options[k]}
+
+	#echo -e ${#optName[*]}
 
 	#for ((k = 0 ; k < ${#optName[@]} ; k++)); do 
 		#echo $k"-->"${optName[k]}
 	#done
-	for ((k = 0 ; k < ${#dir1[@]} ; k++)); do 
-		echo $k"-->"${dir1[k]}
-	done
+	#for ((k = 0 ; k < ${#dir1[@]} ; k++)); do 
+		#echo $k"-->"${dir1[k]}
+	#done
 echo "2."
 	for ((k = 0 ; k < ${#dir2[@]} ; k++)); do 
 		echo $k"-->"${dir2[k]}
+
 	done
+
 	echo .
 	echo $auswahl
 	#echo ${optName[8]}
@@ -73,14 +98,13 @@ echo "2."
 	
 #	echo $(xml_grep 'version' config.xml --text_only)
 
-#	echo $scriptort
-#	echo "$0"         #scriptname
+
 }
-###
 
 ### 
 eingesteckt ( ) { #fct  Stick drin ? $1 Ort $2 Name
 		ls -a $1 >/dev/null 2>&1
+
 		while [ $? != 0 ] # Fenster wiederholen bis gefunden oder Abbruch
 		do
 			zenity --question --title="$title" --width="350" --text="Stick '$2' fehlt!\nNoch einen Versuch ?" 	
@@ -91,8 +115,8 @@ eingesteckt ( ) { #fct  Stick drin ? $1 Ort $2 Name
 			ls -a $1 >/dev/null 2>&1
 		done
 }
+###
 
-### 
 verbunden ( ) { #fct Netzlaufwerk verbunden ?
 		lw=$1"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
 #echo $lw
@@ -150,10 +174,32 @@ for i in "${!optName[@]}"; do
 		done
 #echo "+++ "$index" +++"
 
-
-
 #### Aufruf ####
 case $auswahl in
+
+	#${options[0etc]})  # für alle slae01 bis SLAE99 ; nur ALLEGROSS oder alleklein
+	#+([slae|SLAE])??) 
+		#eingesteckt $auswahl
+		#meld ~/slae_kim "$stickort/"$auswahl"/slaekim"
+		#;;
+	${options[1]}|${options[12]})  #	usrIserv)  #usr
+	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
+		meld  /home/stefan/slae_kim/usr "/mnt/iserv_laettig/Files/usr"
+		;;	
+	${options[2]})  #	untIserv)  #unt
+	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
+		meld  /home/stefan/slae_unt "/mnt/iserv_laettig/Files/unt"
+		;;	
+	${options[3]})  #	ausdruck)  #drucken
+	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
+		meld  /home/stefan/slae_kim/ausdruck "/mnt/iserv_laettig/Files/ausdruck"
+		;;	
+	${options[4]})  #	ABFUNT) #ab nach unt shuffeln
+		meld  /home/stefan/slae_kim/abf "/home/stefan/slae_unt"		
+		;;
+	#${options[5]})  #	SLAE03
+	#${options[6]})  #	KeePass)  #6
+	
 	${optName[$index]})  #	new aus config
 
 echo .
@@ -198,6 +244,7 @@ echo ">"${dir2[$index]}"<"
 
 	${optName[6]})  #	KeePass)  #6
 	echo "Fehler! kw!"
+
 		verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  ~/.door3 "/mnt/iserv_laettig/Files/kp/myt"
 		;;		
@@ -224,7 +271,6 @@ echo ">"${dir2[$index]}"<"
 		#~/perl/rsync_push.sh
 		echo "tbd"
 		;;
-
 
 	$config)
 		geany "$scriptort${0:1}"
