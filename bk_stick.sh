@@ -4,9 +4,34 @@ shopt -s extglob
 ## if $1 leer then ="config.xml" einbauen
 echo -e "Starte..........\n" # Testoption
 
-echo $1
+ZieheArg () { # 
+	#echo "drin"
+	#echo $1
+	#echo $2
+	a=$1
+	echo ${a:(($(expr index "$a" "$2") + 2))} && arg=${a:0:(($(expr index "$a" "$3") + 3))}
+	#echo "raus"
+	
+}
 
-[[ -n "$1" ]] && c="$1" || c="config.xml"
+###
+#echo $1$2$3$4"<1"
+#echo $@
+
+arg=$@
+#echo $arg"#"
+
+#i=$(expr index "$arg" "-c")
+#echo $((i + 2))
+#arg=${arg:(($(expr index "$arg" "-c ") + 2))} && arg=${arg:0:(($(expr index "$arg" ".xml") + 3))}
+
+#echo ">"$arg"<<"
+
+c=$(ZieheArg "$arg" "-c " ".xml") && echo "los" || echo "Fehler 44"
+
+#[[ -n "$arg" ]] && c="$arg" || c="config.xml"
+
+echo .
 echo $c"<"
 
 ################# config einlesen
@@ -15,7 +40,8 @@ scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 title=$(xml_grep 'title' $c --text_only)
 text=$(xml_grep 'text' config.xml --text_only) && text=${text/\$version/$version} && text=${text/\$verstxt/$verstxt}   #gefällt mir nicht Name getname ??
-config=$(xml_grep 'config' config.xml --text_only)
+config=$(xml_grep 'config' config.xml --text_only) && confProg=$(xml_grep 'confProg' config.xml --text_only)
+meld=$(xml_grep 'meld' config.xml --text_only)
 
 homeVerz=$(xml_grep 'homeVerz' config.xml --text_only)
 stickort=$(xml_grep 'stickort' config.xml --text_only)
@@ -52,6 +78,9 @@ for ((k = 0 ; k < ${#dir2[@]} ; k++)); do 	# standard-Verezeichnis einsetzen ode
 								  |	sed "s|\$RemoteOrt|$RemoteOrt|" \
 																						) 
 	done
+
+echo $(xml_grep 'ordpaar' config.xml --text_only)
+
 echo -e "eingelsen!\n" # Testoption
 
 ################# Start
@@ -136,12 +165,12 @@ stringContain() { #fct mit [-i]-option für case UNsensitiv!
 
 ######## Hauptfenster ########
 
-ZeigeOptionen # Testoption
+# ZeigeOptionen # Testoption
 
 while [ ! "$auswahl" ]; do       # Wiederanzeige bis Auswahl
 	auswahl=`zenity --height "350" --width "450" \
 	--title "$title" --text "$text" \
-	--list --column="Optionen"	${optName[*]} $config \
+	--list --column="Optionen"	${optName[*]} $meld $config \
 	` 	
 	###### gewaehlt -> abgang ######
 	if  [ $? != 0 ]; then
@@ -249,20 +278,22 @@ case $auswahl in
 		echo "Heureka!"
 		;;	
 	#${optName[10]})  #	meld)
-		#echo "Fehler! kw!"
-		##meld
-		#;;
+
 	${optName[11]})  #	rsync_push)	
 	echo "Fehler! kw!"
 		#~/perl/rsync_push.sh
 		echo "tbd"
 		;;
-
-	$config)
-		geany "$scriptort${0:1}"
+		
+		
+	$meld)        #	meld pur)	
+		meld || echo "Fehler 87"
+		;;
+	$config)      # script ändern)  	
+		$confProg "$scriptort${0:1}" || echo "Fehler 88"
 		;;
 	*) # caseelse
-echo "Fehler 77! (caseelse)"	
+echo "Fehler 99 (caseelse)"	
 		;;
 esac
 
