@@ -1,52 +1,37 @@
 #!/bin/bash
 shopt -s extglob
 	 
-## if $1 leer then ="config.xml" einbauen
 echo -e "Starte..........\n" # Testoption
-
-ZieheArg () { # 
-	#echo "drin"
-	#echo $1
-	#echo $2
-	a=$1
-	echo ${a:(($(expr index "$a" "$2") + 2))} && arg=${a:0:(($(expr index "$a" "$3") + 3))}
-	#echo "raus"
-	
-}
-
-###
-#echo $1$2$3$4"<1"
-#echo $@
-
-arg=$@
-#echo $arg"#"
-
-#i=$(expr index "$arg" "-c")
-#echo $((i + 2))
-#arg=${arg:(($(expr index "$arg" "-c ") + 2))} && arg=${arg:0:(($(expr index "$arg" ".xml") + 3))}
-
-#echo ">"$arg"<<"
-
-c=$(ZieheArg "$arg" "-c " ".xml") && echo "los" || echo "Fehler 44"
-
-#[[ -n "$arg" ]] && c="$arg" || c="config.xml"
-
-echo .
-echo $c"<"
+while getopts ':c:e:h' OPTION;  do # -c "$cfile" -e geany -h help
+	case "$OPTION" in
+		c)
+        cfile=${OPTARG}
+		;;
+		e) 
+ 		confProg=${OPTARG}  
+		;;
+		?|h)
+		echo "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-h]"
+		exit 1
+		;;
+	esac
+done  
 
 ################# config einlesen
-version=$(xml_grep 'version' config.xml --text_only) && verstxt=$(xml_grep 'verstxt' config.xml --text_only)
+[[ -z "$cfile" ]] && cfile="config.xml"
+version=$(xml_grep 'version' "$cfile" --text_only) && verstxt=$(xml_grep 'verstxt' "$cfile" --text_only)
 scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-title=$(xml_grep 'title' $c --text_only)
-text=$(xml_grep 'text' config.xml --text_only) && text=${text/\$version/$version} && text=${text/\$verstxt/$verstxt}   #gefällt mir nicht Name getname ??
-config=$(xml_grep 'config' config.xml --text_only) && confProg=$(xml_grep 'confProg' config.xml --text_only)
-meld=$(xml_grep 'meld' config.xml --text_only)
+title=$(xml_grep 'title' $cfile --text_only)
+text=$(xml_grep 'text' "$cfile" --text_only) && text=${text/\$version/$version} && text=${text/\$verstxt/$verstxt}   #gefällt mir nicht Name getname ??
+config=$(xml_grep 'config' "$cfile" --text_only) 
+[[ -z "$confProg" ]] && confProg=$(xml_grep 'confProg' "$cfile" --text_only)
+meld=$(xml_grep 'meld' "$cfile" --text_only)
 
-homeVerz=$(xml_grep 'homeVerz' config.xml --text_only)
-stickort=$(xml_grep 'stickort' config.xml --text_only)
-StdVerz=$(xml_grep 'StdVerz' config.xml --text_only)
-RemoteOrt=$(xml_grep 'RemoteOrt' config.xml --text_only)
+homeVerz=$(xml_grep 'homeVerz' "$cfile" --text_only)
+stickort=$(xml_grep 'stickort' "$cfile" --text_only)
+StdVerz=$(xml_grep 'StdVerz' "$cfile" --text_only)
+RemoteOrt=$(xml_grep 'RemoteOrt' "$cfile" --text_only)
 
 ## Liste der möglichen Vergleiche (Ordner)
 	optName=("")   							#0
@@ -55,13 +40,13 @@ RemoteOrt=$(xml_grep 'RemoteOrt' config.xml --text_only)
 	optName+=("KIMocloud" "dokumente" "kw") 		#7-9
 	optName+=("kw"  "rsync_push" "kw") 				#10-12
 
-optName+=($(xml_grep 'name' config.xml --text_only))				#new
+optName+=($(xml_grep 'name' "$cfile" --text_only))				#new
 
 	dir1=("" "" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "")
-dir1+=($(xml_grep 'dir1' config.xml --text_only))				#new
+dir1+=($(xml_grep 'dir1' "$cfile" --text_only))				#new
 
 	dir2=("0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "")
-dir2+=($(xml_grep 'dir2' config.xml --text_only))				#new
+dir2+=($(xml_grep 'dir2' "$cfile" --text_only))				#new
 
 ##
 for ((k = 0 ; k < ${#dir2[@]} ; k++)); do 	# standard-Verezeichnis einsetzen oder korrigieren (~ zu /home/stefan/) 
@@ -79,7 +64,7 @@ for ((k = 0 ; k < ${#dir2[@]} ; k++)); do 	# standard-Verezeichnis einsetzen ode
 																						) 
 	done
 
-echo $(xml_grep 'ordpaar' config.xml --text_only)
+#echo $(xml_grep 'ordpaar' "$cfile" --text_only)
 
 echo -e "eingelsen!\n" # Testoption
 
@@ -111,7 +96,7 @@ echo "2."
 	#echo ${optName[8]}
 	echo .	
 	
-#	echo $(xml_grep 'version' config.xml --text_only)
+#	echo $(xml_grep 'version' "$cfile" --text_only)
 
 
 }
