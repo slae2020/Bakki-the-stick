@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<bk-script_options 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<bk-script_options
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xsd">
-					
+
 	<general>
-		<version date="2024-07-01">1.1</version>	
+		<version date="2024-07-01">1.1</version>
 		<verstxt> mit config.xml-Datei</verstxt>
 		<title>Starter BK</title>
 		<text>Meld-Vergleich auswählen (v$version;$verstxt)</text>
@@ -21,52 +21,66 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 
 	<vergleiche>
 		<ordpaar>
-		<id>00</id>	
-		<name>SLAE01_#0</name>
+		<id>00</id>
+		<name>SLAE01</name>
+<!-- keine Lücken im Namen / SLAEnn nur ALLEGROSS oder alleklein  ;-->
 		<dir1>~/slae_kim</dir1>
 		<dir2>$stickort/SLAE01$StdVerz</dir2>
 		</ordpaar>
 		<ordpaar>
 		<id>01</id>
-		<name>iservUSR_#1</name>
+		<name>iservUSR</name>
 		<dir1>~/slae_kim/usr</dir1>
 		<dir2>$RemoteOrt/usr</dir2>
 		</ordpaar>
 		<ordpaar>
 		<id>02</id>
-		<name>iserv_unt#2</name>
+		<name>iserv_unt</name>
 		<dir1>~/slae_unt</dir1>
 		<dir2>$RemoteOrt/unt</dir2>
 		</ordpaar>
 		<ordpaar>
-		<id>03</id>			
-		<name>iservAusdruck_#3</name>
+		<id>03</id>
+		<name>iservAusdruck</name>
 		<dir1>~/slae_kim/ausdruck</dir1>
 		<dir2>$RemoteOrt/ausdruck</dir2>
 		</ordpaar>
 		<ordpaar>
-		<id>04</id>			
-		<name>ShuffleUnt_#4</name>
+		<id>04</id>
+		<name>ShuffleUnt</name>
 		<dir1>~/slae_kim/abf</dir1>
 		<dir2>~/slae_unt</dir2>
 		</ordpaar>
-		
 		<ordpaar>
-		<id>05</id>			
-		<name>SLAE03_#5</name>
+		<id>05</id>
+		<name>SLAE03</name>
 		<dir1>~/slae_kim</dir1>
 		<dir2>$stickort/SLAE03$StdVerz</dir2>
-		</ordpaar>	
-		
+		</ordpaar>
 		<ordpaar>
-		<id>06</id>			
-		<name>Keepass_#6</name>
+		<id>06</id>
+		<name>Keepass</name>
 		<dir1>~/.door3</dir1>
 		<dir2>$RemoteOrt/kp/myt</dir2>
 		</ordpaar>
+
 		<ordpaar>
-		<id>07</id>			
-		<name>tbd_#07</name>
+		<id>07</id>
+		<name>KIMocloud_td</name>
+		<dir1>???</dir1>
+		<dir2>???</dir2>
+		</ordpaar>
+
+		<ordpaar>
+		<id>08</id>
+		<name>BK_dokumente_td</name>
+		<dir1>~/dokumente</dir1>
+		<dir2>afp://stefan@willem.local/francois3/dokumente</dir2>
+		</ordpaar>
+
+		<ordpaar>
+		<id>09</id>
+		<name>rsync_push_td</name>
 		<dir1>???</dir1>
 		<dir2>???</dir2>
 		</ordpaar>
@@ -74,21 +88,4 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 
 </bk-script_options>
 <!-- Ende des XML-Dokumentes -->
-<!-- keine Lücken im Namen ;-->
-<!-- für id als attr    xml_grep '' kw.xml -cond '*[@id="04"]' -text_only -->
 
-<!--
->>>>>>> cf06b07 (Mo Pause 2)
-		<ordpaar>
-		<name>test</name>
-		<dir1>~/prog/as</dir1>
-		<dir2>/home/woher/</dir2>
-		</ordpaar>
-		<ordpaar>
-		<name>test2</name>
-		<dir1>~/slae_kim/usr</dir1>
-		<dir2>/home/woher/</dir2>
-		</ordpaar>
-</bk-script_options>
--->
-<!-- Ende des XML-Dokumentes -->

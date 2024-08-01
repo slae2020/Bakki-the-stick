@@ -1,21 +1,27 @@
 #!/bin/bash
 shopt -s extglob
-	 
+
+declare -i cmdNr
+
 echo -e "Starte..........\n" # Testoption
-while getopts ':c:e:h' OPTION;  do # -c "$cfile" -e geany -h help
+################ args einlesen
+while getopts ':c:e:n:h' OPTION;  do # -c "$cfile" -e geany -n automatisch# -h help
 	case "$OPTION" in
 		c)
-        cfile=${OPTARG}
+		cfile=${OPTARG}
 		;;
-		e) 
- 		confProg=${OPTARG}  
+		e)
+ 		confProg=${OPTARG}
+		;;
+		n)
+		cmdNr=${OPTARG} || unset cmdNr # wenn keine Zahl dann leeren
 		;;
 		?|h)
 		echo "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-h]"
 		exit 1
 		;;
 	esac
-done  
+done
 
 ################# config einlesen
 [[ -z "$cfile" ]] && cfile="config.xml"
@@ -23,8 +29,8 @@ version=$(xml_grep 'version' "$cfile" --text_only) && verstxt=$(xml_grep 'verstx
 scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 title=$(xml_grep 'title' $cfile --text_only)
-text=$(xml_grep 'text' "$cfile" --text_only) && text=${text/\$version/$version} && text=${text/\$verstxt/$verstxt}   #gefällt mir nicht Name getname ??
-config=$(xml_grep 'config' "$cfile" --text_only) 
+text=$(xml_grep 'text' "$cfile" --text_only) && text=${text/\$version/$version} && text=${text/\$verstxt/$verstxt}
+config=$(xml_grep 'config' "$cfile" --text_only)
 [[ -z "$confProg" ]] && confProg=$(xml_grep 'confProg' "$cfile" --text_only)
 meld=$(xml_grep 'meld' "$cfile" --text_only)
 
@@ -34,80 +40,76 @@ StdVerz=$(xml_grep 'StdVerz' "$cfile" --text_only)
 RemoteOrt=$(xml_grep 'RemoteOrt' "$cfile" --text_only)
 
 ## Liste der möglichen Vergleiche (Ordner)
-	optName=("")   							#0
-	optName+=("kw" "KW" "KW")    	#1-3
-	optName+=("KW"   "KW" "kw") 		#4-6
-	optName+=("KIMocloud" "dokumente" "kw") 		#7-9
-	optName+=("kw"  "rsync_push" "kw") 				#10-12
+ident+=($(xml_grep 'id' "$cfile" --text_only))
+optName+=($(xml_grep 'name' "$cfile" --text_only))
+dir1+=($(xml_grep 'dir1' "$cfile" --text_only))
+dir2+=($(xml_grep 'dir2' "$cfile" --text_only))
 
-optName+=($(xml_grep 'name' "$cfile" --text_only))				#new
-
-	dir1=("" "" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "")
-dir1+=($(xml_grep 'dir1' "$cfile" --text_only))				#new
-
-	dir2=("0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "")
-dir2+=($(xml_grep 'dir2' "$cfile" --text_only))				#new
-
-##
-for ((k = 0 ; k < ${#dir2[@]} ; k++)); do 	# standard-Verezeichnis einsetzen oder korrigieren (~ zu /home/stefan/) 
+###
+for ((k = 0 ; k < ${#dir2[@]} ; k++)); do 	# standard-Verzeichnis einsetzen oder korrigieren (~ zu /home/stefan/)
 	[[ ${dir1[k]} =~ [~|\$] ]] &&
 		dir1[k]=$(echo ${dir1[k]} | sed "s|~|${homeVerz}|;s|\$homeVerz|${homeVerz}|"  \
 								  |	sed "s|\$stickort|$stickort|" \
 								  |	sed "s|\$StdVerz|$StdVerz|" \
 								  |	sed "s|\$RemoteOrt|$RemoteOrt|" \
 																						)
-	[[ ${dir2[k]} =~ [~|\$] ]] &&																						
+	[[ ${dir2[k]} =~ [~|\$] ]] &&
 		dir2[k]=$(echo ${dir2[k]} | sed "s|~|${homeVerz}|;s|\$homeVerz|${homeVerz}|"  \
 								  |	sed "s|\$stickort|$stickort|" \
 								  |	sed "s|\$StdVerz|$StdVerz|" \
 								  |	sed "s|\$RemoteOrt|$RemoteOrt|" \
-																						) 
+																						)
 	done
+[[ $cmdNr -lt ${#ident[@]} ]]  || unset cmdNr # wenn cmdNr nicht auf Liste loeschen
 
-#echo $(xml_grep 'ordpaar' "$cfile" --text_only)
-
-echo -e "eingelsen!\n" # Testoption
+echo -e "eingelesen! >$cmdNr\n" # Testoption
 
 ################# Start
 
-### 
+###
 ZeigeOptionen () { #fct alle Optionen zur Auswahl anzeigen/ Testoption
 
+#declare -p | grep ident
+#declare -p | grep optName
+
 	#echo ${#options[*]}
-	#for ((k = 0 ; k < ${#options[@]} ; k++)); do 
+	#for ((k = 0 ; k < ${#options[@]} ; k++)); do
 		#echo $k"-->"${options[k]}
 
 	#echo -e ${#optName[*]}
 
-	#for ((k = 0 ; k < ${#optName[@]} ; k++)); do 
-		#echo $k"-->"${optName[k]}
-	#done
-	#for ((k = 0 ; k < ${#dir1[@]} ; k++)); do 
-		#echo $k"-->"${dir1[k]}
-	#done
-echo "2."
-	for ((k = 0 ; k < ${#dir2[@]} ; k++)); do 
-		echo $k"-->"${dir2[k]}
+	#for ((k = 0 ; k < ${#ident[@]} ; k++)); do
+		#echo $k"-->"${ident[k]}
 
-	done
+	#done
+	##for ((k = 0 ; k < ${#optName[@]} ; k++)); do
+		##echo $k"-->"${optName[k]}
+	##done
+	##for ((k = 0 ; k < ${#dir1[@]} ; k++)); do
+		##echo $k"-->"${dir1[k]}
+	##done
+#echo "2."
+	#for ((k = 0 ; k < ${#dir2[@]} ; k++)); do
+		#echo $k"-->"${dir2[k]}
+
+	#done
 
 	echo .
 	echo $auswahl
 	#echo ${optName[8]}
-	echo .	
-	
+	echo .
+
 #	echo $(xml_grep 'version' "$cfile" --text_only)
 
 
 }
-
-### 
+###
 eingesteckt ( ) { #fct  Stick drin ? $1 Ort $2 Name
 		ls -a $1 >/dev/null 2>&1
 
 		while [ $? != 0 ] # Fenster wiederholen bis gefunden oder Abbruch
 		do
-			zenity --question --title="$title" --width="350" --text="Stick '$2' fehlt!\nNoch einen Versuch ?" 	
+			zenity --question --title="$title" --width="350" --text="Stick '$2' fehlt!\nNoch einen Versuch ?"
 			if  [ $? != 0 ]; then
 				exit 1
 			fi
@@ -116,24 +118,71 @@ eingesteckt ( ) { #fct  Stick drin ? $1 Ort $2 Name
 		done
 }
 ###
-
 verbunden ( ) { #fct Netzlaufwerk verbunden ?
 		lw=$1"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
-#echo $lw
 	    ls -A $lw >/dev/null 2>&1
 	    if [ $? != 0 ]  # s.o
 	    then
 			/home/stefan/perl/mounter.sh $1   # ruft mit sudo den mount $1 auf
 			ls -A $lw >/dev/null 2>&1
 			if [ $? != 0 ]; then   # falls mounten nicht geklappt -> Abbruch, nicht ewig schleifen
-				zenity --info --title="$title" --width="350" --text="Das hat nicht geklappt!\nPasswortfehler?\n'$1' \nfehlt! (exit 22)" 	
+				zenity --info --title="$title" --width="350" --text="Das hat nicht geklappt!\nPasswortfehler?\n'$1' \nfehlt! (exit 22)"
 				exit 22
 			fi
 		fi
-}	
+}
+
+######## Hauptfenster ########
+# ZeigeOptionen # Testoption
+
+[[ -n $cmdNr ]] && index=$cmdNr || # falls cmdNr nicht leer Abfrage ueberspringen
+while [ ! "$auswahl" ]; do       # Wiederanzeige bis Auswahl
+	auswahl=`zenity --height "350" --width "450" \
+	--title "$title" --text "$text" \
+	--list --column="Optionen"	${optName[*]} $meld $config \
+	`
+	###### gewaehlt -> abgang ######
+	if  [ $? != 0 ]; then
+		exit 1
+	fi
+	[ $? -ne 0 ] && exit 2 # Abbruch
+done
 
 ###
-stringContain() { #fct mit [-i]-option für case UNsensitiv!
+for i in "${!optName[@]}"; do
+	[[ "${optName[$i]}" = "$auswahl" ]] && index=$i
+	done
+auswahl=${optName[$index]} # Absicherung
+#echo $auswahl"+++ "$index" +++""ä"${ident[$index]}"33""${dir2[$index]}" #Testoption
+
+#### Aufruf ####
+case $auswahl in
+	$meld)     	# meld pur)
+		meld || echo "Fehler 87"
+		;;
+	$config)  	# script ändern)
+		$confProg "$scriptort${0:1}" || echo "Fehler 88"
+		;;
+	${optName[$index]})
+		grep -q "/media/" <<<"${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}"
+		grep -q "/media/" <<<"${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}"
+		grep -q "/mnt/"   <<<"${dir1[$index]}" && verbunden "${dir1[$index]}"
+		grep -q "/mnt/"   <<<"${dir2[$index]}" && verbunden "${dir2[$index]}"
+		###
+		[[ ${dir1[$index]} =~ [\/] || ${dir2[$index]} =~ [\/] ]] &&
+		meld ${dir1[$index]} ${dir2[$index]} || echo "Falsche(r) Ordner für $optName[$index] '"${dir1[$index]}"'||'"${dir2[$index]}"' / (Fehler 66)"
+		;;
+	*) 			# caseelse
+		echo "Fehler 99 (caseelse)"
+		;;
+esac
+
+exit 0
+
+## ab hier junk
+
+###
+string2Contain() { #fct mit [-i]-option für case UNsensitiv!   ???? wieder weg?
 	if [[ $1 == -i ]]; then
         case ${3,,} in
             *${2,,}*) return 0;;
@@ -144,143 +193,102 @@ stringContain() { #fct mit [-i]-option für case UNsensitiv!
             *$1*) return 0;;
             *) return 1;;
         esac
-    fi	
-}	
+    fi
+}
 
 
-######## Hauptfenster ########
+#[[ "qwer" =~ "we3" ]] && echo "ja" || echo "nein"
+#grep -q "we3" <<<"qwer" && echo "ja" || echo "nein"
 
-# ZeigeOptionen # Testoption
+echo $a
+echo  $b
+echo
+[[ $a =~ [\/] ]] && echo "ja" || echo "nein"
+[[ $b =~ [\/] ]] && echo "ja" || echo "nein"
+[[ $a =~ [\/] || $b =~ [\/] ]] && echo "ja" || echo "nein"
 
-while [ ! "$auswahl" ]; do       # Wiederanzeige bis Auswahl
-	auswahl=`zenity --height "350" --width "450" \
-	--title "$title" --text "$text" \
-	--list --column="Optionen"	${optName[*]} $meld $config \
-	` 	
-	###### gewaehlt -> abgang ######
-	if  [ $? != 0 ]; then
-		exit 1
-	fi
-	[ $? -ne 0 ] && exit 2 # Abbruch
-done
+#stringContain "/media/" "${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}" || echo "nicht jetzt"
+		grep -q "/media/" <<<"${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}"
+		stringContain "/media/" "${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}" #in eine verbunden fct???
 
+		stringContain "/mnt/" "${dir1[$index]}" && verbunden "${dir1[$index]}"
+		stringContain "/mnt/" "${dir2[$index]}" && verbunden "${dir2[$index]}"  #in eine verbunden fct?
 
-###
-for i in "${!optName[@]}"; do
-			if [[ "${optName[$i]}" = "$auswahl" ]]; then
-#echo "${i}"; 
-			index=$i
-			fi
-		done
-#echo "+++ "$index" +++"
-
-#### Aufruf ####
-case $auswahl in
 
 	#${options[0etc]})  # für alle slae01 bis SLAE99 ; nur ALLEGROSS oder alleklein
-	#+([slae|SLAE])??) 
+	#+([slae|SLAE])??)
 		#eingesteckt $auswahl
 		#meld ~/slae_kim "$stickort/"$auswahl"/slaekim"
 		#;;
 	${options[1]}|${options[12]})  #	usrIserv)  #usr
 	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  /home/stefan/slae_kim/usr "/mnt/iserv_laettig/Files/usr"
-		;;	
+		;;
 	${options[2]})  #	untIserv)  #unt
 	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  /home/stefan/slae_unt "/mnt/iserv_laettig/Files/unt"
-		;;	
+		;;
 	${options[3]})  #	ausdruck)  #drucken
 	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  /home/stefan/slae_kim/ausdruck "/mnt/iserv_laettig/Files/ausdruck"
-		;;	
+		;;
 	${options[4]})  #	ABFUNT) #ab nach unt shuffeln
-		meld  /home/stefan/slae_kim/abf "/home/stefan/slae_unt"		
+		meld  /home/stefan/slae_kim/abf "/home/stefan/slae_unt"
 		;;
 	#${options[5]})  #	SLAE03
 	#${options[6]})  #	KeePass)  #6
-	
-	${optName[$index]})  #	new aus config
-
-#echo .
-#echo "AAAA"
-#echo $auswahl"<->"${optName[$index]}
-#echo ">"${dir1[$index]}"<"
-#echo ">"${dir2[$index]}"<"
-
-		stringContain "/media/" "${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}" #in eine verbunden fct?
-
-		stringContain "/mnt/" "${dir1[$index]}" && verbunden "${dir1[$index]}"
-		stringContain "/mnt/" "${dir2[$index]}" && verbunden "${dir2[$index]}"  #in eine verbunden fct?
-		###
-		[[ ${dir1[$index]} =~ [\/] ]] &&
-		meld ${dir1[$index]} ${dir2[$index]} || echo "FEhler 66"
-		;;
-#??? 		
+	#???
 	#${optName[0etc]})  # für alle slae01 bis SLAE99 ; nur ALLEGROSS oder alleklein
-	
-	#+([slae|SLAE])??) 
+
+	#+([slae|SLAE])??)
 		#eingesteckt $auswahl
 		#meld ~/slae_kim "$stickort/"$auswahl"/slaekim"
 		#;;
-		
+
 	#${optName[1]}|${optName[12]})  #	usrIserv)  #usr
 	    #verbunden "/mnt/iserv_laettig/"     # erst mounten!
 ##obsol		meld  /home/stefan/slae_kim/usr "/mnt/iserv_laettig/Files/usr"
-#		;;	
+#		;;
 	#${optName[2]})  #	untIserv)  #unt
 	    #verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		#meld  /home/stefan/slae_unt "/mnt/iserv_laettig/Files/unt"
-		#;;	
+		#;;
 	#${optName[3]})  #	ausdruck)  #drucken
 	    #verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		#meld  /home/stefan/slae_kim/ausdruck "/mnt/iserv_laettig/Files/ausdruck"
-		#;;	
+		#;;
 	#${optName[4]})  #	ABFUNT) #ab nach unt shuffeln
-		#meld  /home/stefan/slae_kim/abf "/home/stefan/slae_unt"		
+		#meld  /home/stefan/slae_kim/abf "/home/stefan/slae_unt"
 		#;;
 	#${optName[5]})  #	SLAE03
-#osol	
+#osol
 
 	${optName[6]})  #	KeePass)  #6
 	echo "Fehler! kw!"
 
 		verbunden "/mnt/iserv_laettig/"     # erst mounten!
 		meld  ~/.door3 "/mnt/iserv_laettig/Files/kp/myt"
-		;;		
+		;;
 	${optName[7]})  #	KIMocloud)
 	echo "Fehler! kw!"
 
 ## für slaekim?!?	über nextcloud-app...
-		;;		
+		;;
 	${optName[8]})  #	dokumente)
 	echo "Fehler! kw!"
 ## tbd erst abfragen ob Verbindung afp (oder mnt) ?
 	# 	meld /home/stefan/dokumente  "afp://stefan@willem.local/francois3/dokumente"
-	    ;;		
+	    ;;
 	${optName[9]})   #   ??#1
 	echo "Fehler! kw!"
 		echo "Heureka!"
-		;;	
+		;;
 	#${optName[10]})  #	meld)
 
-	${optName[11]})  #	rsync_push)	
+	${optName[11]})  #	rsync_push)
 	echo "Fehler! kw!"
 		#~/perl/rsync_push.sh
 		echo "tbd"
 		;;
-		
-		
-	$meld)        #	meld pur)	
-		meld || echo "Fehler 87"
-		;;
-	$config)      # script ändern)  	
-		$confProg "$scriptort${0:1}" || echo "Fehler 88"
-		;;
-	*) # caseelse
-echo "Fehler 99 (caseelse)"	
-		;;
-esac
 
-exit 0
 
