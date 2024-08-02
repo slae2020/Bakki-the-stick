@@ -4,6 +4,18 @@ shopt -s extglob
 declare -i cmdNr
 
 echo -e "Starte..........\n" # Testoption
+echo "$pwd"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+echo $SCRIPT_DIR
+
+echo "The script you are running has:"
+echo "basename: [$(basename "$0")]"
+echo "dirname : [$(dirname "$0")]"
+echo "pwd     : [$(pwd)]"
+
+
+
+
 ################ args einlesen
 while getopts ':c:e:n:h' OPTION;  do # -c "$cfile" -e geany -n automatisch# -h help
 	case "$OPTION" in
