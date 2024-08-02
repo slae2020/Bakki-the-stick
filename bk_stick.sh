@@ -152,8 +152,8 @@ done
 for i in "${!optName[@]}"; do
 	[[ "${optName[$i]}" = "$auswahl" ]] && index=$i
 	done
-auswahl=${optName[$index]} # Absicherung
-#echo $auswahl"+++ "$index" +++""ä"${ident[$index]}"33""${dir2[$index]}" #Testoption
+[[ -z $index ]] || auswahl=${optName[$index]} # Absicherung 
+#echo $auswahl"+++ "$index" +++"${ident[$index]}"##"${dir2[$index]} #Testoption
 
 #### Aufruf ####
 case $auswahl in
@@ -170,7 +170,7 @@ case $auswahl in
 		grep -q "/mnt/"   <<<"${dir2[$index]}" && verbunden "${dir2[$index]}"
 		###
 		[[ ${dir1[$index]} =~ [\/] || ${dir2[$index]} =~ [\/] ]] &&
-		meld ${dir1[$index]} ${dir2[$index]} || echo "Falsche(r) Ordner für $optName[$index] '"${dir1[$index]}"'||'"${dir2[$index]}"' / (Fehler 66)"
+		meld ${dir1[$index]} ${dir2[$index]} >/dev/null 2>&1  || echo "Falsche(r) Ordner für $optName[$index] '"${dir1[$index]}"'||'"${dir2[$index]}"' / (Fehler 66)" 
 		;;
 	*) 			# caseelse
 		echo "Fehler 99 (caseelse)"
@@ -180,115 +180,3 @@ esac
 exit 0
 
 ## ab hier junk
-
-###
-string2Contain() { #fct mit [-i]-option für case UNsensitiv!   ???? wieder weg?
-	if [[ $1 == -i ]]; then
-        case ${3,,} in
-            *${2,,}*) return 0;;
-            *) return 1;;
-        esac
-    else
-        case $2 in
-            *$1*) return 0;;
-            *) return 1;;
-        esac
-    fi
-}
-
-
-#[[ "qwer" =~ "we3" ]] && echo "ja" || echo "nein"
-#grep -q "we3" <<<"qwer" && echo "ja" || echo "nein"
-
-echo $a
-echo  $b
-echo
-[[ $a =~ [\/] ]] && echo "ja" || echo "nein"
-[[ $b =~ [\/] ]] && echo "ja" || echo "nein"
-[[ $a =~ [\/] || $b =~ [\/] ]] && echo "ja" || echo "nein"
-
-#stringContain "/media/" "${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}" || echo "nicht jetzt"
-		grep -q "/media/" <<<"${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}"
-		stringContain "/media/" "${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}" #in eine verbunden fct???
-
-		stringContain "/mnt/" "${dir1[$index]}" && verbunden "${dir1[$index]}"
-		stringContain "/mnt/" "${dir2[$index]}" && verbunden "${dir2[$index]}"  #in eine verbunden fct?
-
-
-	#${options[0etc]})  # für alle slae01 bis SLAE99 ; nur ALLEGROSS oder alleklein
-	#+([slae|SLAE])??)
-		#eingesteckt $auswahl
-		#meld ~/slae_kim "$stickort/"$auswahl"/slaekim"
-		#;;
-	${options[1]}|${options[12]})  #	usrIserv)  #usr
-	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
-		meld  /home/stefan/slae_kim/usr "/mnt/iserv_laettig/Files/usr"
-		;;
-	${options[2]})  #	untIserv)  #unt
-	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
-		meld  /home/stefan/slae_unt "/mnt/iserv_laettig/Files/unt"
-		;;
-	${options[3]})  #	ausdruck)  #drucken
-	    verbunden "/mnt/iserv_laettig/"     # erst mounten!
-		meld  /home/stefan/slae_kim/ausdruck "/mnt/iserv_laettig/Files/ausdruck"
-		;;
-	${options[4]})  #	ABFUNT) #ab nach unt shuffeln
-		meld  /home/stefan/slae_kim/abf "/home/stefan/slae_unt"
-		;;
-	#${options[5]})  #	SLAE03
-	#${options[6]})  #	KeePass)  #6
-	#???
-	#${optName[0etc]})  # für alle slae01 bis SLAE99 ; nur ALLEGROSS oder alleklein
-
-	#+([slae|SLAE])??)
-		#eingesteckt $auswahl
-		#meld ~/slae_kim "$stickort/"$auswahl"/slaekim"
-		#;;
-
-	#${optName[1]}|${optName[12]})  #	usrIserv)  #usr
-	    #verbunden "/mnt/iserv_laettig/"     # erst mounten!
-##obsol		meld  /home/stefan/slae_kim/usr "/mnt/iserv_laettig/Files/usr"
-#		;;
-	#${optName[2]})  #	untIserv)  #unt
-	    #verbunden "/mnt/iserv_laettig/"     # erst mounten!
-		#meld  /home/stefan/slae_unt "/mnt/iserv_laettig/Files/unt"
-		#;;
-	#${optName[3]})  #	ausdruck)  #drucken
-	    #verbunden "/mnt/iserv_laettig/"     # erst mounten!
-		#meld  /home/stefan/slae_kim/ausdruck "/mnt/iserv_laettig/Files/ausdruck"
-		#;;
-	#${optName[4]})  #	ABFUNT) #ab nach unt shuffeln
-		#meld  /home/stefan/slae_kim/abf "/home/stefan/slae_unt"
-		#;;
-	#${optName[5]})  #	SLAE03
-#osol
-
-	${optName[6]})  #	KeePass)  #6
-	echo "Fehler! kw!"
-
-		verbunden "/mnt/iserv_laettig/"     # erst mounten!
-		meld  ~/.door3 "/mnt/iserv_laettig/Files/kp/myt"
-		;;
-	${optName[7]})  #	KIMocloud)
-	echo "Fehler! kw!"
-
-## für slaekim?!?	über nextcloud-app...
-		;;
-	${optName[8]})  #	dokumente)
-	echo "Fehler! kw!"
-## tbd erst abfragen ob Verbindung afp (oder mnt) ?
-	# 	meld /home/stefan/dokumente  "afp://stefan@willem.local/francois3/dokumente"
-	    ;;
-	${optName[9]})   #   ??#1
-	echo "Fehler! kw!"
-		echo "Heureka!"
-		;;
-	#${optName[10]})  #	meld)
-
-	${optName[11]})  #	rsync_push)
-	echo "Fehler! kw!"
-		#~/perl/rsync_push.sh
-		echo "tbd"
-		;;
-
-
