@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-declare -ri test=01 #0 für kein test
-[[ $test -gt 0 ]] && echo $test"->Testversion!" # Testversion
+declare -i test=01 #0 für kein test
 
-shopt -s extglob # ???
+#shopt -s extglob # ???
 
 # Define a placeholder space character for use in a configuration file
 declare -r placeholder_space="#x0020"
@@ -35,12 +34,12 @@ declare -a sync_dir1
 declare -a sync_dir2
 
 # Workparameters
-declare cmdNr=""
+declare -i cmdNr=""
 declare selection=""
 
 # Function to extract configuration single values from XML
 extract_config_values() {
-    local -n config_ref=$1  
+    local -n config_ref=$1
 
     for element in "${!config_ref[@]}"; do
         # Get only values from conf-file when empty
@@ -88,31 +87,31 @@ replace_placeholders() {
 
 ###
 eingesteckt ( ) { #fct  Stick drin ? $1 Ort $2 Name
-		ls -a $1 >/dev/null 2>&1
+        ls -a $1 >/dev/null 2>&1
 
-		while [ $? != 0 ] # Fenster wiederholen bis gefunden oder Abbruch
-		do
-			zenity --question --title="$title" --width="350" --text="Stick '$2' fehlt!\nNoch einen Versuch ?"
-			if  [ $? != 0 ]; then
-				exit 1
-			fi
-			[ $? -ne 0 ] && exit 2 # Abbruch
-			ls -a $1 >/dev/null 2>&1
-		done
+        while [ $? != 0 ] # Fenster wiederholen bis gefunden oder Abbruch
+        do
+            zenity --question --title="$title" --width="350" --text="Stick '$2' fehlt!\nNoch einen Versuch ?"
+            if  [ $? != 0 ]; then
+                exit 1
+            fi
+            [ $? -ne 0 ] && exit 2 # Abbruch
+            ls -a $1 >/dev/null 2>&1
+        done
 }
 ###
 verbunden ( ) { #fct Netzlaufwerk verbunden ?
-		lw=$1"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
-	    ls -A $lw >/dev/null 2>&1
-	    if [ $? != 0 ]  # s.o
-	    then
-			/home/stefan/perl/mounter.sh $1   # ruft mit sudo den mount $1 auf
-			ls -A $lw >/dev/null 2>&1
-			if [ $? != 0 ]; then   # falls mounten nicht geklappt -> Abbruch, nicht ewig schleifen
-				zenity --info --title="$title" --width="350" --text="Das hat nicht geklappt!\nPasswortfehler?\n'$1' \nfehlt! (exit 22)"
-				exit 22
-			fi
-		fi
+        lw=$1"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
+        ls -A $lw >/dev/null 2>&1
+        if [ $? != 0 ]  # s.o
+        then
+            /home/stefan/perl/mounter.sh $1   # ruft mit sudo den mount $1 auf
+            ls -A $lw >/dev/null 2>&1
+            if [ $? != 0 ]; then   # falls mounten nicht geklappt -> Abbruch, nicht ewig schleifen
+                zenity --info --title="$title" --width="350" --text="Das hat nicht geklappt!\nPasswortfehler?\n'$1' \nfehlt! (exit 22)"
+                exit 22
+            fi
+        fi
 }
 
 # Error-window & exit with error number; default-value 1 when missing; wait for response except for err==0
@@ -127,7 +126,7 @@ message_exit() {
 }
 
 # Display options for selection
-display_options () {  
+display_options () {
     echo .
 #   echo $(xml_grep 'version' "${script_[config]}" --text_only)
 
@@ -147,15 +146,14 @@ echo "Extracted dir 2: ${sync_dir2[@]}"
 #echo "Wahl: $selection""<-"
 }
 
-[[ $test -gt 0 ]] && echo "Starte..........\n" # Testoption
-
-# Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -h help
-while getopts ':c:e:n:h' OPTION; do 
+# Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -v verbose -h help
+while getopts ':c:e:n:vh' OPTION; do
     case "$OPTION" in
         c) script_[config]=${OPTARG} ;;
         e) config_elements[editor_prog]=${OPTARG} ;;
         n) cmdNr=${OPTARG} || unset cmdNr ;;
-        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-h] \n   " 11; exit $? ;;
+        v) test=0 ;;
+        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-v] [-h] \n   " 11; exit $? ;;
     esac
 done
 
@@ -167,7 +165,7 @@ done
 # Ensure the configuration file exists and is readable
 if [ ! -r "${script_[dir]}${script_[config]}" ]; then
     message_exit "Config-Error: Configuration file '${script_[dir]}${script_[config]}' is not readable." 23
-    exit 
+    exit
 fi
 
 # Call function to extract values
@@ -181,11 +179,19 @@ config_elements[menue_strg]=$(replace_placeholder_strg "${config_elements[menue_
 [[ -z "${config_elements[editor_prog]}" ]] && config_elements[editor_prog]="${config_elements[editor_prog]:-gedit}"
 if [[ ! -x "$(command -v ${config_elements[editor_prog]})" ]]; then
     message_exit "Config-Error: program '${config_elements[editor_prog]}' not found." 31
-    exit 
+    exit
 fi
 
-# Extract IDs, names, paths etc. 
+# Extract IDs, names, paths etc.
 id=($(extract_options_values 'id'))
+
+for element in "${id[@]}"; do
+    if ! [[ "$element" =~ ^[0-9]+$ ]]; then
+        message_exit "Config-Error: identifier '$element' no integer." 32
+        exit
+    fi
+done
+
 sync_name=($(extract_options_values 'name')) && replace_placeholders sync_name
 sync_param=($(extract_options_values 'param')) && replace_placeholders sync_param
 sync_dir1=($(extract_options_values 'dir1')) && replace_placeholders sync_dir1
@@ -201,8 +207,9 @@ if [[ $num_syncs -ne ${#id[@]} ]]; then
     exit
 fi
 
-[[ $test -gt 0 ]] && echo -e "Konfiguration eingelesen! >$cmdNr<\n" # Testoption
-[[ $test -gt 0 ]] && display_options # Testoption
+[[ $test -gt 0 ]] && echo "Konfiguration eingelesen! >$cmdNr<\n"
+[[ $test -gt 0 ]] && echo "Starte....(Testversion) ......\n"
+[[ $test -gt 0 ]] && display_options
 
 # Checking command-number if given
 if [[ -n "$cmdNr" ]]; then
@@ -210,7 +217,7 @@ if [[ -n "$cmdNr" ]]; then
         selection=$cmdNr
     else
         message_exit "Case '$cmdNr' not defined." 66
-        exit 
+        exit
     fi
 fi
 
@@ -221,7 +228,7 @@ while [ -z "$selection" ]; do
         --list --column="Optionen" "${sync_name[@]}" "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
     if [ $? -ne 0 ]; then
         message_exit "Dialog canceled by user." 0
-        exit 
+        exit
     fi
 done
 
@@ -231,7 +238,7 @@ for i in "${!sync_name[@]}"; do
         foundIndex=$i
         break
     fi
-    if [[ "${id[$i]}" == "$selection" ]]; then
+    if [ "${id[$i]}" -eq "$selection" ]; then
         foundIndex=$i
         break
     fi
@@ -250,9 +257,9 @@ case $selection in
     ${config_elements[prog_strg]})
         command_to_execute="${config_elements[prog_strg]}"
         if [[ ! -x "$(command -v $command_to_execute)" ]]; then
-			message_exit "Config-Error: program '$command_to_execute' not found." 76
-			exit
-		else
+            message_exit "Config-Error: program '$command_to_execute' not found." 76
+            exit
+        else
             $command_to_execute & >/dev/null 2>&1
         fi
         ;;
@@ -261,7 +268,7 @@ case $selection in
         command_to_execute="${config_elements[editor_prog]} $xfile"
         if [[ ! -f $xfile ]]; then
             message_exit "File '$xfile' not found." 77
-            exit 
+            exit
         else
             $command_to_execute & >/dev/null 2>&1
         fi
@@ -276,18 +283,18 @@ echo "hie"
         #$command_to_execute & >/dev/null 2>&1
         ;;
 
-	${optName[$index]}) # obsolete???
-		grep -q "/media/" <<<"${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}"
-		grep -q "/media/" <<<"${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}"
-		grep -q "/mnt/"   <<<"${dir1[$index]}" && verbunden "${dir1[$index]}"
-		grep -q "/mnt/"   <<<"${dir2[$index]}" && verbunden "${dir2[$index]}"
-		###
-		[[ ${dir1[$index]} =~ [\/] || ${dir2[$index]} =~ [\/] ]] &&
-		meld ${dir1[$index]} ${dir2[$index]} >/dev/null 2>&1  || echo "Falsche(r) Ordner für $optName[$index] '"${dir1[$index]}"'||'"${dir2[$index]}"' / (Fehler 66)" 
-		;;
+    ${optName[$index]}) # obsolete???
+        grep -q "/media/" <<<"${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}"
+        grep -q "/media/" <<<"${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}"
+        grep -q "/mnt/"   <<<"${dir1[$index]}" && verbunden "${dir1[$index]}"
+        grep -q "/mnt/"   <<<"${dir2[$index]}" && verbunden "${dir2[$index]}"
+        ###
+        [[ ${dir1[$index]} =~ [\/] || ${dir2[$index]} =~ [\/] ]] &&
+        meld ${dir1[$index]} ${dir2[$index]} >/dev/null 2>&1  || echo "Falsche(r) Ordner für $optName[$index] '"${dir1[$index]}"'||'"${dir2[$index]}"' / (Fehler 66)"
+        ;;
     *)
         message_exit "Case '$selection' not defined." 99
-        exit 
+        exit
         ;;
 esac
 
