@@ -1,120 +1,91 @@
-#!/bin/bash
-shopt -s extglob
+#!/usr/bin/env bash
+declare -ri test=01 #0 für kein test
+[[ $test -gt 0 ]] && echo $test"->Testversion!" # Testversion
 
-declare -i cmdNr
+shopt -s extglob # ???
 
-echo -e "Starte..........\n" # Testoption
-echo "$pwd"
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-echo $SCRIPT_DIR
+# Define a placeholder space character for use in a configuration file
+declare -r placeholder_space="#x0020"
 
-echo "The script you are running has:"
-echo "basename: [$(basename "$0")]"
-echo "dirname : [$(dirname "$0")]"
-echo "pwd     : [$(pwd)]"
+# Define associative arrays with desired elements & first allocation
+declare -A script_=(
+    [dir]=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"/"
+    [name]=$(basename "${BASH_SOURCE[0]}")
+    [config]='config.xml'
+)
+declare -A config_elements=(
+    [version]=''
+    [version_strg]=''
+    [lang]=''
+    [title_strg]=''
+    [menue_strg]=''
+    [config_strg]=''
+    [editor_prog]=''
+    [prog_strg]=''
+    [home_directory]=''
+    [storage_location]=''
+    [standard_path]=''
+    [remote_path]=''
+)
+# Define parameter of sync-group-elements
+declare -a id
+declare -a sync_name
+declare -a sync_param
+declare -a sync_dir1
+declare -a sync_dir2
 
+# Workparameters
+declare cmdNr=""
+declare selection=""
 
+# Function to extract configuration single values from XML
+extract_config_values() {
+    local -n config_ref=$1  
 
-
-################ args einlesen
-while getopts ':c:e:n:h' OPTION;  do # -c "$cfile" -e geany -n automatisch# -h help
-	case "$OPTION" in
-		c)
-		cfile=${OPTARG}
-		;;
-		e)
- 		confProg=${OPTARG}
-		;;
-		n)
-		cmdNr=${OPTARG} || unset cmdNr # wenn keine Zahl dann leeren
-		;;
-		?|h)
-		echo "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-h]"
-		exit 1
-		;;
-	esac
-done
-
-################# config einlesen
-[[ -z "$cfile" ]] && cfile="config.xml"
-version=$(xml_grep 'version' "$cfile" --text_only) && verstxt=$(xml_grep 'verstxt' "$cfile" --text_only)
-scriptort=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
-title=$(xml_grep 'title' $cfile --text_only)
-text=$(xml_grep 'text' "$cfile" --text_only) && text=${text/\$version/$version} && text=${text/\$verstxt/$verstxt}
-config=$(xml_grep 'config' "$cfile" --text_only)
-[[ -z "$confProg" ]] && confProg=$(xml_grep 'confProg' "$cfile" --text_only)
-meld=$(xml_grep 'meld' "$cfile" --text_only)
-
-homeVerz=$(xml_grep 'homeVerz' "$cfile" --text_only)
-stickort=$(xml_grep 'stickort' "$cfile" --text_only)
-StdVerz=$(xml_grep 'StdVerz' "$cfile" --text_only)
-RemoteOrt=$(xml_grep 'RemoteOrt' "$cfile" --text_only)
-
-## Liste der möglichen Vergleiche (Ordner)
-ident+=($(xml_grep 'id' "$cfile" --text_only))
-optName+=($(xml_grep 'name' "$cfile" --text_only))
-dir1+=($(xml_grep 'dir1' "$cfile" --text_only))
-dir2+=($(xml_grep 'dir2' "$cfile" --text_only))
-
-###
-for ((k = 0 ; k < ${#dir2[@]} ; k++)); do 	# standard-Verzeichnis einsetzen oder korrigieren (~ zu /home/stefan/)
-	[[ ${dir1[k]} =~ [~|\$] ]] &&
-		dir1[k]=$(echo ${dir1[k]} | sed "s|~|${homeVerz}|;s|\$homeVerz|${homeVerz}|"  \
-								  |	sed "s|\$stickort|$stickort|" \
-								  |	sed "s|\$StdVerz|$StdVerz|" \
-								  |	sed "s|\$RemoteOrt|$RemoteOrt|" \
-																						)
-	[[ ${dir2[k]} =~ [~|\$] ]] &&
-		dir2[k]=$(echo ${dir2[k]} | sed "s|~|${homeVerz}|;s|\$homeVerz|${homeVerz}|"  \
-								  |	sed "s|\$stickort|$stickort|" \
-								  |	sed "s|\$StdVerz|$StdVerz|" \
-								  |	sed "s|\$RemoteOrt|$RemoteOrt|" \
-																						)
-	done
-[[ $cmdNr -lt ${#ident[@]} ]]  || unset cmdNr # wenn cmdNr nicht auf Liste loeschen
-
-echo -e "eingelesen! >$cmdNr\n" # Testoption
-
-################# Start
-
-###
-ZeigeOptionen () { #fct alle Optionen zur Auswahl anzeigen/ Testoption
-
-#declare -p | grep ident
-#declare -p | grep optName
-
-	#echo ${#options[*]}
-	#for ((k = 0 ; k < ${#options[@]} ; k++)); do
-		#echo $k"-->"${options[k]}
-
-	#echo -e ${#optName[*]}
-
-	#for ((k = 0 ; k < ${#ident[@]} ; k++)); do
-		#echo $k"-->"${ident[k]}
-
-	#done
-	##for ((k = 0 ; k < ${#optName[@]} ; k++)); do
-		##echo $k"-->"${optName[k]}
-	##done
-	##for ((k = 0 ; k < ${#dir1[@]} ; k++)); do
-		##echo $k"-->"${dir1[k]}
-	##done
-#echo "2."
-	#for ((k = 0 ; k < ${#dir2[@]} ; k++)); do
-		#echo $k"-->"${dir2[k]}
-
-	#done
-
-	echo .
-	echo $auswahl
-	#echo ${optName[8]}
-	echo .
-
-#	echo $(xml_grep 'version' "$cfile" --text_only)
-
-
+    for element in "${!config_ref[@]}"; do
+        # Get only values from conf-file when empty
+        if [[ -z ${config_ref["$element"]} ]]; then
+            config_ref["$element"]=$(xml_grep "$element" "${script_[config]}" --text_only 2>/dev/null)
+        fi
+        # Warn if xml-tag is missing or empty
+        if [[ -z "${config_ref[$element]}" ]]; then
+            [[ $test -gt 0 ]] && echo "Warning (8) for '$element': no value found in config file ${script_[config]}" || \
+            message_exit "Warning for '$element': no value in config file ${script_[config]}" 8
+            unset ${config_ref[$element]}
+        fi
+    done
 }
+
+# Function to extract configuration arrays from XML
+extract_options_values() {
+    local element="$1"
+    xml_grep $element "${script_[config]}" --text_only
+}
+
+# Function to replace defined placeholder from config-file into string
+replace_placeholder_strg() {
+    local input=$1
+    local placeholder=$2
+    local replacement=$3
+    if [[ $input =~ [$placeholder] ]]; then
+        input=$(echo "$input" | sed "s|$placeholder|$replacement|g")
+    fi
+    echo $input
+}
+
+# Function to replace specific placeholders after reading
+replace_placeholders() {
+    local -n ref=$1
+    for ((k = 0; k < ${#id[@]}; k++)); do
+        ref[k]=$(replace_placeholder_strg "${ref[k]}" "~" "${config_elements[home_directory]}")
+        ref[k]=$(replace_placeholder_strg "${ref[k]}" "\$homeVerz" "${config_elements[home_directory]}")
+        ref[k]=$(replace_placeholder_strg "${ref[k]}" "\$stickort" "${config_elements[storage_location]}")
+        ref[k]=$(replace_placeholder_strg "${ref[k]}" "\$stdpath" "${config_elements[standard_path]}")
+        ref[k]=$(replace_placeholder_strg "${ref[k]}" "\$remotepath" "${config_elements[remote_path]}")
+        ref[k]=$(replace_placeholder_strg "${ref[k]}" "$placeholder_space" " ")
+    done
+}
+
 ###
 eingesteckt ( ) { #fct  Stick drin ? $1 Ort $2 Name
 		ls -a $1 >/dev/null 2>&1
@@ -144,38 +115,168 @@ verbunden ( ) { #fct Netzlaufwerk verbunden ?
 		fi
 }
 
-######## Hauptfenster ########
-# ZeigeOptionen # Testoption
+# Error-window & exit with error number; default-value 1 when missing; wait for response except for err==0
+message_exit() {
+    local txt=$1
+    local err=$2
+    err="${err:-1}"
+    if [[ $err -gt 0 ]]; then
+        zenity --error --title ${script_[name]} --text="$txt ($err)"
+    fi
+    echo $err
+}
 
-[[ -n $cmdNr ]] && index=$cmdNr || # falls cmdNr nicht leer Abfrage ueberspringen
-while [ ! "$auswahl" ]; do       # Wiederanzeige bis Auswahl
-	auswahl=`zenity --height "350" --width "450" \
-	--title "$title" --text "$text" \
-	--list --column="Optionen"	${optName[*]} $meld $config \
-	`
-	###### gewaehlt -> abgang ######
-	if  [ $? != 0 ]; then
-		exit 1
-	fi
-	[ $? -ne 0 ] && exit 2 # Abbruch
+# Display options for selection
+display_options () {  
+    echo .
+#   echo $(xml_grep 'version' "${script_[config]}" --text_only)
+
+for i in "${!config_elements[@]}"; do
+    echo -n "$i -->"
+    echo ${config_elements[$i]}
 done
 
-###
-for i in "${!optName[@]}"; do
-	[[ "${optName[$i]}" = "$auswahl" ]] && index=$i
-	done
-[[ -z $index ]] || auswahl=${optName[$index]} # Absicherung 
-#echo $auswahl"+++ "$index" +++"${ident[$index]}"##"${dir2[$index]} #Testoption
+echo .
+# Debugging output
+echo "Extracted IDs: ${id[@]}"
+echo "Extracted Names: ${sync_name[@]}"
+echo "Extracted Param: ${sync_param[@]}"
+echo "Extracted dir 1: ${sync_dir1[@]}"
+echo "Extracted dir 2: ${sync_dir2[@]}"
 
-#### Aufruf ####
-case $auswahl in
-	$meld)     	# meld pur)
-		meld || echo "Fehler 87"
-		;;
-	$config)  	# script ändern)
-		$confProg "$scriptort${0:1}" || echo "Fehler 88"
-		;;
-	${optName[$index]})
+#echo "Wahl: $selection""<-"
+}
+
+[[ $test -gt 0 ]] && echo "Starte..........\n" # Testoption
+
+# Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -h help
+while getopts ':c:e:n:h' OPTION; do 
+    case "$OPTION" in
+        c) script_[config]=${OPTARG} ;;
+        e) config_elements[editor_prog]=${OPTARG} ;;
+        n) cmdNr=${OPTARG} || unset cmdNr ;;
+        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-h] \n   " 11; exit $? ;;
+    esac
+done
+
+# Reading configuration file
+
+# Ensure the configuration file is set, defaulting to "config.xml" if not provided
+[[ -z "${script_[config]}" ]] && script_[config]="${script_[config]:-config.xml}"
+
+# Ensure the configuration file exists and is readable
+if [ ! -r "${script_[dir]}${script_[config]}" ]; then
+    message_exit "Config-Error: Configuration file '${script_[dir]}${script_[config]}' is not readable." 23
+    exit 
+fi
+
+# Call function to extract values
+extract_config_values config_elements
+
+# Replace placeholders from config
+config_elements[menue_strg]=$(replace_placeholder_strg "${config_elements[menue_strg]}" "\$version" "${config_elements[version]}")
+config_elements[menue_strg]=$(replace_placeholder_strg "${config_elements[menue_strg]}" "\$verstxt" "${config_elements[version_strg]}")
+
+# Ensure the editor-prog is set, defaulting to "gedit" if not provided & checking existence
+[[ -z "${config_elements[editor_prog]}" ]] && config_elements[editor_prog]="${config_elements[editor_prog]:-gedit}"
+if [[ ! -x "$(command -v ${config_elements[editor_prog]})" ]]; then
+    message_exit "Config-Error: program '${config_elements[editor_prog]}' not found." 31
+    exit 
+fi
+
+# Extract IDs, names, paths etc. 
+id=($(extract_options_values 'id'))
+sync_name=($(extract_options_values 'name')) && replace_placeholders sync_name
+sync_param=($(extract_options_values 'param')) && replace_placeholders sync_param
+sync_dir1=($(extract_options_values 'dir1')) && replace_placeholders sync_dir1
+sync_dir2=($(extract_options_values 'dir2')) && replace_placeholders sync_dir2
+
+# Calculate the number of syncs by dividing the total by the number of sync types
+total_sync_elements=$((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]}))
+num_syncs=$((total_sync_elements / 4))
+
+# Check if the number of syncs matches the number of IDs
+if [[ $num_syncs -ne ${#id[@]} ]]; then
+    message_exit "Error: Parameter file is not well-filled." 45
+    exit
+fi
+
+[[ $test -gt 0 ]] && echo -e "Konfiguration eingelesen! >$cmdNr<\n" # Testoption
+[[ $test -gt 0 ]] && display_options # Testoption
+
+# Checking command-number if given
+if [[ -n "$cmdNr" ]]; then
+    if [[ ${id[@]} =~ "$cmdNr" ]]; then
+        selection=$cmdNr
+    else
+        message_exit "Case '$cmdNr' not defined." 66
+        exit 
+    fi
+fi
+
+# Loop until a selection is made
+while [ -z "$selection" ]; do
+    selection=$(zenity --height "350" --width "450" \
+        --title "${config_elements[title_strg]}" --text "${config_elements[menue_strg]}" \
+        --list --column="Optionen" "${sync_name[@]}" "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
+    if [ $? -ne 0 ]; then
+        message_exit "Dialog canceled by user." 0
+        exit 
+    fi
+done
+
+# Match foundIndex to selection
+for i in "${!sync_name[@]}"; do
+    if [[ "${sync_name[$i]}" == "$selection" ]]; then
+        foundIndex=$i
+        break
+    fi
+    if [[ "${id[$i]}" == "$selection" ]]; then
+        foundIndex=$i
+        break
+    fi
+done
+
+# Check if foundIndex is set and within bounds (to make sure)
+if [[ -n $foundIndex && foundIndex -ge 0 && foundIndex -lt ${#sync_name[@]} ]]; then
+    selection=${sync_name[$foundIndex]}
+fi
+
+[[ $test -gt 0 ]] && echo "Selected: $selection" # Testversion
+[[ $test -gt 0 ]] && echo $selection"+++ "$foundIndex" +++"${id[$foundIndex]}"##"${sync_prog[$foundIndex]}"<>""${sync_path[$foundIndex]}${sync_file[$foundIndex]}" #Testoption
+
+# Execution with the selected option
+case $selection in
+    ${config_elements[prog_strg]})
+        command_to_execute="${config_elements[prog_strg]}"
+        if [[ ! -x "$(command -v $command_to_execute)" ]]; then
+			message_exit "Config-Error: program '$command_to_execute' not found." 76
+			exit
+		else
+            $command_to_execute & >/dev/null 2>&1
+        fi
+        ;;
+    ${config_elements[config_strg]})
+        xfile="${script_[dir]}${script_[config]}"
+        command_to_execute="${config_elements[editor_prog]} $xfile"
+        if [[ ! -f $xfile ]]; then
+            message_exit "File '$xfile' not found." 77
+            exit 
+        else
+            $command_to_execute & >/dev/null 2>&1
+        fi
+        ;;
+    ${sync_name[$foundIndex]})
+echo "hie"
+        #command_to_execute="${template_prog[$foundIndex]} ${template_path[$foundIndex]}${template_file[$foundIndex]}"
+        #if [[ ${template_file[$foundIndex]} =~ ".ott" && ! -r "${template_path[$foundIndex]}${template_file[$foundIndex]}" ]]; then
+            #message_exit "'${template_path[$foundIndex]}${template_file[$foundIndex]}' \n not found." 05
+            #exit $?
+        #fi
+        #$command_to_execute & >/dev/null 2>&1
+        ;;
+
+	${optName[$index]}) # obsolete???
 		grep -q "/media/" <<<"${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}"
 		grep -q "/media/" <<<"${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}"
 		grep -q "/mnt/"   <<<"${dir1[$index]}" && verbunden "${dir1[$index]}"
@@ -184,9 +285,10 @@ case $auswahl in
 		[[ ${dir1[$index]} =~ [\/] || ${dir2[$index]} =~ [\/] ]] &&
 		meld ${dir1[$index]} ${dir2[$index]} >/dev/null 2>&1  || echo "Falsche(r) Ordner für $optName[$index] '"${dir1[$index]}"'||'"${dir2[$index]}"' / (Fehler 66)" 
 		;;
-	*) 			# caseelse
-		echo "Fehler 99 (caseelse)"
-		;;
+    *)
+        message_exit "Case '$selection' not defined." 99
+        exit 
+        ;;
 esac
 
 exit 0

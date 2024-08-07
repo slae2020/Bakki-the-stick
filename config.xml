@@ -3,65 +3,76 @@
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xsd">
 
+<!--
+placeholder_space="#x0020"
+-->
+
 	<general>
-		<version date="2024-08-02">1.2</version>
-		<verstxt> mit config.xml-Datei</verstxt>
-		<title>Starter BK</title>
-		<text>Meld-Vergleich auswählen (v$version;$verstxt)</text>
-		<config>Einstellungen</config>
-		<confProg>geany</confProg>
-		<meld>Meld-Programm</meld>
+		<version date="2024-08-07">1.2a</version>
+		<version_strg> Anpassung offi</version_strg>
+		<lang>de</lang>
+		<title_strg>Starter BK</title_strg>
+		<menue_strg>Meld-Vergleich auswählen (v$version;$verstxt)</menue_strg>
+		<config_strg>Einstellungen</config_strg>
+		<editor_prog>gedit</editor_prog>
+		<prog_strg>meld</prog_strg>
 	</general>
 	<directories>
-		<homeVerz>/home/stefan</homeVerz>
-		<stickort>/media/stefan</stickort>
-		<StdVerz>/slaekim</StdVerz>
-		<RemoteOrt>/mnt/iserv_laettig/Files</RemoteOrt>
+		<home_directory>/home/stefan</home_directory>
+		<storage_location>/media/stefan</storage_location>
+		<standard_path>/slaekim</standard_path> 
+		<remote_path>/mnt/iserv_laettig/Files</remote_path>
 	</directories>
 
 	<vergleiche>
+<!--
+		keine Lücken in name
+		immer #x0020 für nix/leer 
+-->
 		<ordpaar>
 		<id>00</id>
 		<name>SLAE01</name>
-<!-- keine Lücken im Namen / SLAEnn nur ALLEGROSS oder alleklein  ;-->
 		<dir1>~/slae_kim</dir1>
-		<dir2>$stickort/SLAE01$StdVerz</dir2>
+		<dir2>$stickort/SLAE01$stdpath</dir2>
 		</ordpaar>
+
 		<ordpaar>
 		<id>01</id>
-		<name>iservUSR</name>
-		<dir1>~/slae_kim/usr</dir1>
-		<dir2>$RemoteOrt/usr</dir2>
+		<name>iserv#x0020USR</name>
+		<dir1>~$stdpath/usr</dir1>
+		<dir2>$remotepath/usr</dir2>
 		</ordpaar>
 		<ordpaar>
 		<id>02</id>
-		<name>iserv_unt</name>
+		<name>iserv#x0020unt</name>
 		<dir1>~/slae_unt</dir1>
-		<dir2>$RemoteOrt/unt</dir2>
+		<dir2>$remotepath/unt</dir2>
 		</ordpaar>
 		<ordpaar>
 		<id>03</id>
-		<name>iservAusdruck</name>
+		<name>iserv#x0020Ausdruck</name>
 		<dir1>~/slae_kim/ausdruck</dir1>
-		<dir2>$RemoteOrt/ausdruck</dir2>
+		<dir2>$remotepath/ausdruck</dir2>
 		</ordpaar>
 		<ordpaar>
 		<id>04</id>
-		<name>ShuffleUnt</name>
+		<name>Shuffle#x0020nach#x0020unten</name>
 		<dir1>~/slae_kim/abf</dir1>
 		<dir2>~/slae_unt</dir2>
 		</ordpaar>
+
 		<ordpaar>
 		<id>05</id>
 		<name>SLAE03</name>
 		<dir1>~/slae_kim</dir1>
-		<dir2>$stickort/SLAE03$StdVerz</dir2>
+		<dir2>$stickort/SLAE03$stdpath</dir2>
 		</ordpaar>
 		<ordpaar>
+
 		<id>06</id>
 		<name>Keepass</name>
 		<dir1>~/.door3</dir1>
-		<dir2>$RemoteOrt/kp/myt</dir2>
+		<dir2>$remotepath/kp/myt</dir2>
 		</ordpaar>
 
 		<ordpaar>
@@ -81,8 +92,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<ordpaar>
 		<id>09</id>
 		<name>rsync_push_td</name>
-		<dir1>???</dir1>
-		<dir2>???</dir2>
+		<dir1>#x0020</dir1>
+		<dir2>#x0020</dir2>
 		</ordpaar>
 	</vergleiche>
 
