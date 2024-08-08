@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 declare -i test=01 #0 für kein test
 
-#shopt -s extglob # ???
+shopt -s extglob # ???
 
 # Define a placeholder space character for use in a configuration file
 declare -r placeholder_space="#x0020"
@@ -20,7 +20,7 @@ declare -A config_elements=(
     [menue_strg]=''
     [config_strg]=''
     [editor_prog]=''
-    [prog_strg]=''
+    [prog_strg]='meld'
     [home_directory]=''
     [storage_location]=''
     [standard_path]=''
@@ -34,7 +34,7 @@ declare -a sync_dir1
 declare -a sync_dir2
 
 # Workparameters
-declare -i cmdNr=""
+declare -i cmdNr=0
 declare selection=""
 
 # Function to extract configuration single values from XML
@@ -85,55 +85,105 @@ replace_placeholders() {
     done
 }
 
-###
-eingesteckt ( ) { #fct  Stick drin ? $1 Ort $2 Name
-        ls -a $1 >/dev/null 2>&1
-
-        while [ $? != 0 ] # Fenster wiederholen bis gefunden oder Abbruch
-        do
-            zenity --question --title="$title" --width="350" --text="Stick '$2' fehlt!\nNoch einen Versuch ?"
-            if  [ $? != 0 ]; then
-                exit 1
-            fi
-            [ $? -ne 0 ] && exit 2 # Abbruch
-            ls -a $1 >/dev/null 2>&1
-        done
-}
-###
-verbunden ( ) { #fct Netzlaufwerk verbunden ?
-        lw=$1"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
-        ls -A $lw >/dev/null 2>&1
-        if [ $? != 0 ]  # s.o
-        then
-            /home/stefan/perl/mounter.sh $1   # ruft mit sudo den mount $1 auf
-            ls -A $lw >/dev/null 2>&1
-            if [ $? != 0 ]; then   # falls mounten nicht geklappt -> Abbruch, nicht ewig schleifen
-                zenity --info --title="$title" --width="350" --text="Das hat nicht geklappt!\nPasswortfehler?\n'$1' \nfehlt! (exit 22)"
-                exit 22
-            fi
-        fi
-}
-
 # Error-window & exit with error number; default-value 1 when missing; wait for response except for err==0
 message_exit() {
     local txt=$1
     local err=$2
     err="${err:-1}"
     if [[ $err -gt 0 ]]; then
-        zenity --error --title ${script_[name]} --text="$txt ($err)"
+        zenity --error --width "250" --title ${script_[name]} --text="$txt ($err)"
     fi
     echo $err
+}
+
+# Function to check if a USB stick is present
+check_stick() {
+    local stick_path=$1
+    local stick_name=$2
+    while true; do
+        if ls -A "$stick_path" >/dev/null 2>&1; then
+            break
+        else
+            zenity --question --title ${script_[name]} --width="350" --text="Stick '$stick_name' is missing!\nDo you want to try again? (21)"
+            if [ $? -ne 0 ]; then
+                exit 21
+            fi
+        fi
+    done
+}
+
+###
+check_mount2 ( ) { #fct Netzlaufwerk verbunden ? obsolete ???
+	local mounted_path=$1
+    local lw=$mounted_path"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
+        ls -A $lw >/dev/null 2>&1
+        if [ $? != 0 ]  
+        then
+            /home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path"   # ruft mit sudo den mount $1 auf ??? klappt nicht wg path??
+            ls -A $lw >/dev/null 2>&1
+            if [ $? != 0 ]; then   # falls mounten nicht geklappt -> Abbruch, nicht ewig schleifen
+                message_exit "Das hat nicht geklappt!\n'$mounted_path' not mounted." 22
+                exit
+            fi
+        fi
+}
+
+
+# Function to check if a network drive is mounted, and attempt to mount it if not
+check_mount() { 
+    local mounted_path=$1
+    local test_subdir=$mounted_path"/." # Arbitrary subdirectory always present for testing
+
+    # Check if the directory is accessible
+    if ! test -d "$test_subdir"; then
+        # Attempt to mount the network drive
+        /home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path" # ruft mit sudo den mount $1 auf ??? klappt nicht wg path??
+        mnt_resp=$?
+        echo $mnt_resp"<22"
+        
+        # Recheck if the directory is accessible after mounting
+        if ! test -d "$test_subdir"; then
+            message_exit "Failed (#$mnt_resp) to find mounted or to mount \n'$mounted_path'." 22
+            exit
+        fi
+    fi
+}
+
+# Function to check if a path exists
+check_path() {
+	local path=$1			   
+	local name=$2
+
+	if [[ $path =~ "/media/" ]]; then 
+		check_stick "$path" "$name" 
+	fi
+	if [[ $path =~ "/mnt/" ]]; then 
+		check_mount "$path"
+	fi
+	if ! test -d "$path"; then
+		message_exit "Config-Error: Path \n'$path'\n doesn't exist." 23
+		exit
+	fi
+}
+# Function to check availibility of a program
+check_prog() {
+	local prog_name=$1
+	
+	if [[ ! -x "$(command -v $prog_name)" ]]; then
+		message_exit "Config-Error: program '$prog_name' not found." 74
+        exit
+    fi  
 }
 
 # Display options for selection
 display_options () {
     echo .
-#   echo $(xml_grep 'version' "${script_[config]}" --text_only)
+echo $cmdNr
 
-for i in "${!config_elements[@]}"; do
-    echo -n "$i -->"
-    echo ${config_elements[$i]}
-done
+#for i in "${!config_elements[@]}"; do
+    #echo -n "$i -->"
+    #echo ${config_elements[$i]}
+#done
 
 echo .
 # Debugging output
@@ -143,15 +193,16 @@ echo "Extracted Param: ${sync_param[@]}"
 echo "Extracted dir 1: ${sync_dir1[@]}"
 echo "Extracted dir 2: ${sync_dir2[@]}"
 
-#echo "Wahl: $selection""<-"
+echo "Wahl: $selection""<- cmdNr->"$cmdNr"<"
 }
 
+unset cmdNr 
 # Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -v verbose -h help
 while getopts ':c:e:n:vh' OPTION; do
     case "$OPTION" in
         c) script_[config]=${OPTARG} ;;
         e) config_elements[editor_prog]=${OPTARG} ;;
-        n) cmdNr=${OPTARG} || unset cmdNr ;;
+        n) cmdNr=${OPTARG} ;;
         v) test=0 ;;
         ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-v] [-h] \n   " 11; exit $? ;;
     esac
@@ -177,10 +228,8 @@ config_elements[menue_strg]=$(replace_placeholder_strg "${config_elements[menue_
 
 # Ensure the editor-prog is set, defaulting to "gedit" if not provided & checking existence
 [[ -z "${config_elements[editor_prog]}" ]] && config_elements[editor_prog]="${config_elements[editor_prog]:-gedit}"
-if [[ ! -x "$(command -v ${config_elements[editor_prog]})" ]]; then
-    message_exit "Config-Error: program '${config_elements[editor_prog]}' not found." 31
-    exit
-fi
+check_prog "${config_elements[editor_prog]}"
+check_prog "${config_elements[prog_strg]}"
 
 # Extract IDs, names, paths etc.
 id=($(extract_options_values 'id'))
@@ -215,6 +264,7 @@ fi
 if [[ -n "$cmdNr" ]]; then
     if [[ ${id[@]} =~ "$cmdNr" ]]; then
         selection=$cmdNr
+        echo "pups"
     else
         message_exit "Case '$cmdNr' not defined." 66
         exit
@@ -238,7 +288,7 @@ for i in "${!sync_name[@]}"; do
         foundIndex=$i
         break
     fi
-    if [ "${id[$i]}" -eq "$selection" ]; then
+    if [ "${id[$i]}" -eq "$selection" >/dev/null 2>&1 ]; then
         foundIndex=$i
         break
     fi
@@ -255,42 +305,20 @@ fi
 # Execution with the selected option
 case $selection in
     ${config_elements[prog_strg]})
-        command_to_execute="${config_elements[prog_strg]}"
-        if [[ ! -x "$(command -v $command_to_execute)" ]]; then
-            message_exit "Config-Error: program '$command_to_execute' not found." 76
-            exit
-        else
-            $command_to_execute & >/dev/null 2>&1
-        fi
+        command_to_execute="${config_elements[prog_strg]}" #&& check_prog "$command_to_execute"
+        $command_to_execute & >/dev/null 2>&1
         ;;
     ${config_elements[config_strg]})
-        xfile="${script_[dir]}${script_[config]}"
-        command_to_execute="${config_elements[editor_prog]} $xfile"
-        if [[ ! -f $xfile ]]; then
-            message_exit "File '$xfile' not found." 77
-            exit
-        else
-            $command_to_execute & >/dev/null 2>&1
-        fi
+        xfile="${script_[dir]}${script_[config]}e3" 
+        check_path "$xfile" "nil"
+        command_to_execute="${config_elements[editor_prog]} $xfile" 
+        $command_to_execute & >/dev/null 2>&1
         ;;
     ${sync_name[$foundIndex]})
-echo "hie"
-        #command_to_execute="${template_prog[$foundIndex]} ${template_path[$foundIndex]}${template_file[$foundIndex]}"
-        #if [[ ${template_file[$foundIndex]} =~ ".ott" && ! -r "${template_path[$foundIndex]}${template_file[$foundIndex]}" ]]; then
-            #message_exit "'${template_path[$foundIndex]}${template_file[$foundIndex]}' \n not found." 05
-            #exit $?
-        #fi
-        #$command_to_execute & >/dev/null 2>&1
-        ;;
-
-    ${optName[$index]}) # obsolete???
-        grep -q "/media/" <<<"${dir1[$index]}" && eingesteckt "${dir1[$index]}" "${optName[$index]}"
-        grep -q "/media/" <<<"${dir2[$index]}" && eingesteckt "${dir2[$index]}" "${optName[$index]}"
-        grep -q "/mnt/"   <<<"${dir1[$index]}" && verbunden "${dir1[$index]}"
-        grep -q "/mnt/"   <<<"${dir2[$index]}" && verbunden "${dir2[$index]}"
-        ###
-        [[ ${dir1[$index]} =~ [\/] || ${dir2[$index]} =~ [\/] ]] &&
-        meld ${dir1[$index]} ${dir2[$index]} >/dev/null 2>&1  || echo "Falsche(r) Ordner für $optName[$index] '"${dir1[$index]}"'||'"${dir2[$index]}"' / (Fehler 66)"
+		check_path "${sync_dir1[$foundIndex]}" "${sync_name[$foundIndex]}" 
+		check_path "${sync_dir2[$foundIndex]}" "${sync_name[$foundIndex]}"
+		command_to_execute="${config_elements[prog_strg]} ${sync_dir1[$foundIndex]} ${sync_dir2[$foundIndex]}" #&& check_prog "$command_to_execute"
+		$command_to_execute & >/dev/null 2>&1
         ;;
     *)
         message_exit "Case '$selection' not defined." 99

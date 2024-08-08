@@ -20,7 +20,7 @@ placeholder_space="#x0020"
 	<directories>
 		<home_directory>/home/stefan</home_directory>
 		<storage_location>/media/stefan</storage_location>
-		<standard_path>/slaekim</standard_path> 
+		<standard_path>/slae_kim</standard_path> 
 		<remote_path>/mnt/iserv_laettig/Files</remote_path>
 	</directories>
 
