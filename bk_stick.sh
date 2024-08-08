@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-declare -i test=01 #0 für kein test
-
-shopt -s extglob # ???
+declare -i is_test_mode=1  # 1 for test mode, 0 for normal operation
 
 # Define a placeholder space character for use in a configuration file
 declare -r placeholder_space="#x0020"
@@ -32,9 +30,10 @@ declare -a sync_name
 declare -a sync_param
 declare -a sync_dir1
 declare -a sync_dir2
+declare -i num_sync_elements=4
 
 # Workparameters
-declare -i cmdNr=0
+declare -i cmdNr=0 && unset cmdNr
 declare selection=""
 
 # Function to extract configuration single values from XML
@@ -48,7 +47,7 @@ extract_config_values() {
         fi
         # Warn if xml-tag is missing or empty
         if [[ -z "${config_ref[$element]}" ]]; then
-            [[ $test -gt 0 ]] && echo "Warning (8) for '$element': no value found in config file ${script_[config]}" || \
+            [[ $is_test_mode -gt 0 ]] && echo "Warning (8) for '$element': no value found in config file ${script_[config]}" || \
             message_exit "Warning for '$element': no value in config file ${script_[config]}" 8
             unset ${config_ref[$element]}
         fi
@@ -104,7 +103,7 @@ check_stick() {
         if ls -A "$stick_path" >/dev/null 2>&1; then
             break
         else
-            zenity --question --title ${script_[name]} --width="350" --text="Stick '$stick_name' is missing!\nDo you want to try again? (21)"
+            zenity --question --title ${script_[name]} --width="350" --text="Stick '$stick_name' is missing!\n[  '$stick_path' not found  ]\nDo you want to try again? (21)"
             if [ $? -ne 0 ]; then
                 exit 21
             fi
@@ -112,67 +111,47 @@ check_stick() {
     done
 }
 
-###
-check_mount2 ( ) { #fct Netzlaufwerk verbunden ? obsolete ???
-	local mounted_path=$1
-    local lw=$mounted_path"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
-        ls -A $lw >/dev/null 2>&1
-        if [ $? != 0 ]  
-        then
-            /home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path"   # ruft mit sudo den mount $1 auf ??? klappt nicht wg path??
-            ls -A $lw >/dev/null 2>&1
-            if [ $? != 0 ]; then   # falls mounten nicht geklappt -> Abbruch, nicht ewig schleifen
-                message_exit "Das hat nicht geklappt!\n'$mounted_path' not mounted." 22
-                exit
-            fi
-        fi
-}
-
-
 # Function to check if a network drive is mounted, and attempt to mount it if not
-check_mount() { 
+check_mount() {
     local mounted_path=$1
     local test_subdir=$mounted_path"/." # Arbitrary subdirectory always present for testing
 
-    # Check if the directory is accessible
-    if ! test -d "$test_subdir"; then
-        # Attempt to mount the network drive
-        /home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path" # ruft mit sudo den mount $1 auf ??? klappt nicht wg path??
-        mnt_resp=$?
-        echo $mnt_resp"<22"
-        
+    # Check if the mount-directory is accessible
+    if [[ ! -r "$test_subdir" ]]; then
+        mnt_resp=$(/home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path" "${script_[name]}")  # ruft mit sudo den mount $1 auf ??? klappt nicht wg path??
+
         # Recheck if the directory is accessible after mounting
-        if ! test -d "$test_subdir"; then
+        if [[ ! -r "$test_subdir" ]]; then
             message_exit "Failed (#$mnt_resp) to find mounted or to mount \n'$mounted_path'." 22
             exit
         fi
     fi
 }
 
-# Function to check if a path exists
+# Function to check if a path is readable
 check_path() {
-	local path=$1			   
-	local name=$2
+    local path=$1
+    local name=$2
 
-	if [[ $path =~ "/media/" ]]; then 
-		check_stick "$path" "$name" 
-	fi
-	if [[ $path =~ "/mnt/" ]]; then 
-		check_mount "$path"
-	fi
-	if ! test -d "$path"; then
-		message_exit "Config-Error: Path \n'$path'\n doesn't exist." 23
-		exit
-	fi
+    if [[ $path =~ "/media/" ]]; then
+        check_stick "$path" "$name"
+    fi
+    if [[ $path =~ "/mnt/" ]]; then
+        check_mount "$path"
+    fi
+    if [[ !  -r "$path" ]]; then
+        message_exit "Config-Error: Path \n'$path'\n is not readable." 23
+        exit
+    fi
 }
 # Function to check availibility of a program
 check_prog() {
-	local prog_name=$1
-	
-	if [[ ! -x "$(command -v $prog_name)" ]]; then
-		message_exit "Config-Error: program '$prog_name' not found." 74
+    local prog_name=$1
+
+    if [[ ! -x "$(command -v $prog_name)" ]]; then
+        message_exit "Config-Error: program '$prog_name' not found." 74
         exit
-    fi  
+    fi
 }
 
 # Display options for selection
@@ -187,24 +166,23 @@ echo $cmdNr
 
 echo .
 # Debugging output
-echo "Extracted IDs: ${id[@]}"
-echo "Extracted Names: ${sync_name[@]}"
-echo "Extracted Param: ${sync_param[@]}"
-echo "Extracted dir 1: ${sync_dir1[@]}"
-echo "Extracted dir 2: ${sync_dir2[@]}"
+#echo "Extracted IDs: ${id[@]}"
+#echo "Extracted Names: ${sync_name[@]}"
+#echo "Extracted Param: ${sync_param[@]}"
+#echo "Extracted dir 1: ${sync_dir1[@]}"
+#echo "Extracted dir 2: ${sync_dir2[@]}"
 
 echo "Wahl: $selection""<- cmdNr->"$cmdNr"<"
 }
 
-unset cmdNr 
 # Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -v verbose -h help
 while getopts ':c:e:n:vh' OPTION; do
     case "$OPTION" in
         c) script_[config]=${OPTARG} ;;
         e) config_elements[editor_prog]=${OPTARG} ;;
         n) cmdNr=${OPTARG} ;;
-        v) test=0 ;;
-        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-v] [-h] \n   " 11; exit $? ;;
+        v) is_test_mode=0 ;;
+        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-v] [-h] \n   " 11; exit ;;
     esac
 done
 
@@ -212,12 +190,7 @@ done
 
 # Ensure the configuration file is set, defaulting to "config.xml" if not provided
 [[ -z "${script_[config]}" ]] && script_[config]="${script_[config]:-config.xml}"
-
-# Ensure the configuration file exists and is readable
-if [ ! -r "${script_[dir]}${script_[config]}" ]; then
-    message_exit "Config-Error: Configuration file '${script_[dir]}${script_[config]}' is not readable." 23
-    exit
-fi
+check_path "${script_[dir]}${script_[config]}"
 
 # Call function to extract values
 extract_config_values config_elements
@@ -234,9 +207,10 @@ check_prog "${config_elements[prog_strg]}"
 # Extract IDs, names, paths etc.
 id=($(extract_options_values 'id'))
 
+# Check if id are integers
 for element in "${id[@]}"; do
     if ! [[ "$element" =~ ^[0-9]+$ ]]; then
-        message_exit "Config-Error: identifier '$element' no integer." 32
+        message_exit "Config-Error: identifier '$element' in config-file is not an integer." 32
         exit
     fi
 done
@@ -246,25 +220,20 @@ sync_param=($(extract_options_values 'param')) && replace_placeholders sync_para
 sync_dir1=($(extract_options_values 'dir1')) && replace_placeholders sync_dir1
 sync_dir2=($(extract_options_values 'dir2')) && replace_placeholders sync_dir2
 
-# Calculate the number of syncs by dividing the total by the number of sync types
-total_sync_elements=$((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]}))
-num_syncs=$((total_sync_elements / 4))
-
 # Check if the number of syncs matches the number of IDs
-if [[ $num_syncs -ne ${#id[@]} ]]; then
-    message_exit "Error: Parameter file is not well-filled." 45
+if [ $(($((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]})) / num_sync_elements)) -ne ${#id[@]} ]; then
+    message_exit "Missing data: Config-file is not well-filled." 45
     exit
 fi
 
-[[ $test -gt 0 ]] && echo "Konfiguration eingelesen! >$cmdNr<\n"
-[[ $test -gt 0 ]] && echo "Starte....(Testversion) ......\n"
-[[ $test -gt 0 ]] && display_options
+[[ $is_test_mode -gt 0 ]] && echo "Konfiguration eingelesen! >$cmdNr<\n"
+[[ $is_test_mode -gt 0 ]] && echo "Starte....(Testversion) ......\n"
+[[ $is_test_mode -gt 0 ]] && display_options
 
 # Checking command-number if given
 if [[ -n "$cmdNr" ]]; then
     if [[ ${id[@]} =~ "$cmdNr" ]]; then
         selection=$cmdNr
-        echo "pups"
     else
         message_exit "Case '$cmdNr' not defined." 66
         exit
@@ -299,26 +268,26 @@ if [[ -n $foundIndex && foundIndex -ge 0 && foundIndex -lt ${#sync_name[@]} ]]; 
     selection=${sync_name[$foundIndex]}
 fi
 
-[[ $test -gt 0 ]] && echo "Selected: $selection" # Testversion
-[[ $test -gt 0 ]] && echo $selection"+++ "$foundIndex" +++"${id[$foundIndex]}"##"${sync_prog[$foundIndex]}"<>""${sync_path[$foundIndex]}${sync_file[$foundIndex]}" #Testoption
+[[ $is_test_mode -gt 0 ]] && echo "Selected: $selection" # Testversion
+[[ $is_test_mode -gt 0 ]] && echo $selection"+++ "$foundIndex" +++"${id[$foundIndex]}"##"${sync_prog[$foundIndex]}"<>""${sync_path[$foundIndex]}${sync_file[$foundIndex]}" #Testoption
 
 # Execution with the selected option
 case $selection in
     ${config_elements[prog_strg]})
         command_to_execute="${config_elements[prog_strg]}" #&& check_prog "$command_to_execute"
-        $command_to_execute & >/dev/null 2>&1
+        eval $command_to_execute & >/dev/null 2>&1
         ;;
     ${config_elements[config_strg]})
-        xfile="${script_[dir]}${script_[config]}e3" 
+        xfile="${script_[dir]}${script_[config]}"
         check_path "$xfile" "nil"
-        command_to_execute="${config_elements[editor_prog]} $xfile" 
-        $command_to_execute & >/dev/null 2>&1
+        command_to_execute="${config_elements[editor_prog]} $xfile"
+        eval $command_to_execute & >/dev/null 2>&1
         ;;
     ${sync_name[$foundIndex]})
-		check_path "${sync_dir1[$foundIndex]}" "${sync_name[$foundIndex]}" 
-		check_path "${sync_dir2[$foundIndex]}" "${sync_name[$foundIndex]}"
-		command_to_execute="${config_elements[prog_strg]} ${sync_dir1[$foundIndex]} ${sync_dir2[$foundIndex]}" #&& check_prog "$command_to_execute"
-		$command_to_execute & >/dev/null 2>&1
+        check_path "${sync_dir1[$foundIndex]}" "${sync_name[$foundIndex]}"
+        check_path "${sync_dir2[$foundIndex]}" "${sync_name[$foundIndex]}"
+        command_to_execute="${config_elements[prog_strg]} ${sync_dir1[$foundIndex]} ${sync_dir2[$foundIndex]}" #&& check_prog "$command_to_execute"
+        eval $command_to_execute & >/dev/null 2>&1
         ;;
     *)
         message_exit "Case '$selection' not defined." 99
@@ -329,3 +298,32 @@ esac
 exit 0
 
 ## ab hier junk
+
+###
+check_mount2 ( ) { #fct Netzlaufwerk verbunden ? obsolete ???
+    local mounted_path=$1
+    local lw=$mounted_path"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
+        ls -A $lw >/dev/null 2>&1
+        if [ $? != 0 ]
+        then
+            /home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path" "${script_[name]}" # ruft mit sudo den mount $1 auf ??? klappt nicht wg path??
+            ls -A $lw >/dev/null 2>&1
+            if [ $? != 0 ]; then   # falls mounten nicht geklappt -> Abbruch, nicht ewig schleifen
+                message_exit "Das hat nicht geklappt!\n'$mounted_path' not mounted." 22
+                exit
+            fi
+        fi
+}
+
+
+
+# Calculate the number of syncs by dividing the total by the number of sync types
+total_sync_elements=$((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]}))
+num_syncs=$((total_sync_elements / num_sync_elements))
+
+exit 29
+# Ensure the configuration file exists and is readable
+if [ ! -r "${script_[dir]}${script_[config]}" ]; then
+    message_exit "Config-Error: Configuration file '${script_[dir]}${script_[config]}' is not readable." 23
+    exit
+fi

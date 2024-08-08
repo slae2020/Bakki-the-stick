@@ -18,6 +18,7 @@ placeholder_space="#x0020"
 		<prog_strg>meld</prog_strg>
 	</general>
 	<directories>
+<!-- kein ~ hier -->
 		<home_directory>/home/stefan</home_directory>
 		<storage_location>/media/stefan</storage_location>
 		<standard_path>/slae_kim</standard_path> 
@@ -26,14 +27,18 @@ placeholder_space="#x0020"
 
 	<vergleiche>
 <!--
-		keine Lücken in name
+		id immer integer
+		keine Lücken in name & id
 		immer #x0020 für nix/leer 
 -->
 		<ordpaar>
 		<id>00</id>
 		<name>SLAE01</name>
 		<dir1>~/slae_kim</dir1>
+<!--
 		<dir2>$stickort/SLAE01$stdpath</dir2>
+-->
+<dir2>$stickort/slae02</dir2>
 		</ordpaar>
 
 		<ordpaar>
