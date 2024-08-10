@@ -89,10 +89,11 @@ message_exit() {
     local txt=$1
     local err=$2
     err="${err:-1}"
+    txt=$(echo "$txt" | sed "s|: |:\n|")
     if [[ $err -gt 0 ]]; then
         zenity --error --width "250" --title ${script_[name]} --text="$txt ($err)"
     fi
-    echo $err
+    return $err
 }
 
 # Function to check if a USB stick is present
@@ -103,7 +104,7 @@ check_stick() {
         if ls -A "$stick_path" >/dev/null 2>&1; then
             break
         else
-            zenity --question --title ${script_[name]} --width="350" --text="Stick '$stick_name' is missing!\n[  '$stick_path' not found  ]\nDo you want to try again? (21)"
+            zenity --question --title ${script_[name]} --width="350" --text="'$stick_name' is missing!\n[  '$stick_path' not found  ]\nDo you want to try again? (21)"
             if [ $? -ne 0 ]; then
                 exit 21
             fi
@@ -122,7 +123,7 @@ check_mount() {
 
         # Recheck if the directory is accessible after mounting
         if [[ ! -r "$test_subdir" ]]; then
-            message_exit "Failed (#$mnt_resp) to find mounted or to mount \n'$mounted_path'." 22
+            message_exit "Error: Failed (#$mnt_resp) to find mounted or to mount \n'$mounted_path'." 22
             exit
         fi
     fi
@@ -140,6 +141,7 @@ check_path() {
         check_mount "$path"
     fi
     if [[ !  -r "$path" ]]; then
+        path="${path:-   }"
         message_exit "Config-Error: Path \n'$path'\n is not readable." 23
         exit
     fi
@@ -149,7 +151,7 @@ check_prog() {
     local prog_name=$1
 
     if [[ ! -x "$(command -v $prog_name)" ]]; then
-        message_exit "Config-Error: program '$prog_name' not found." 74
+        message_exit "Config-Error: program '$prog_name' not found." 24
         exit
     fi
 }
@@ -186,11 +188,14 @@ while getopts ':c:e:n:vh' OPTION; do
     esac
 done
 
-# Reading configuration file
-
 # Ensure the configuration file is set, defaulting to "config.xml" if not provided
 [[ -z "${script_[config]}" ]] && script_[config]="${script_[config]:-config.xml}"
-check_path "${script_[dir]}${script_[config]}"
+[[ "$(dirname "${script_[config]}")"  == "." ]] && script_[config]="${script_[dir]}${script_[config]}"
+check_path "${script_[config]}"
+
+# Reading configuration file
+[[ $is_test_mode -gt 0 ]] && zenity --notification  --window-icon="info" --title ${script_[name]} \
+                                --text="${script_[name]}\nReading configuration file \n\n${script_[config]}." --timeout=1 &  #???
 
 # Call function to extract values
 extract_config_values config_elements
@@ -210,7 +215,7 @@ id=($(extract_options_values 'id'))
 # Check if id are integers
 for element in "${id[@]}"; do
     if ! [[ "$element" =~ ^[0-9]+$ ]]; then
-        message_exit "Config-Error: identifier '$element' in config-file is not an integer." 32
+        message_exit "Config-Error: identifier '$element' in config-file has to be an integer!" 32
         exit
     fi
 done
@@ -221,21 +226,25 @@ sync_dir1=($(extract_options_values 'dir1')) && replace_placeholders sync_dir1
 sync_dir2=($(extract_options_values 'dir2')) && replace_placeholders sync_dir2
 
 # Check if the number of syncs matches the number of IDs
-if [ $(($((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]})) / num_sync_elements)) -ne ${#id[@]} ]; then
-    message_exit "Missing data: Config-file is not well-filled." 45
+num_param=$((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]} ))
+rate=$(( $num_param % $num_sync_elements ))
+if [ $rate -ne 0 ]; then
+    message_exit "Missing data: Config-file with '$num_param MOD $num_sync_elements' item(s) is not well-filled." 45
     exit
 fi
 
 [[ $is_test_mode -gt 0 ]] && echo "Konfiguration eingelesen! >$cmdNr<\n"
 [[ $is_test_mode -gt 0 ]] && echo "Starte....(Testversion) ......\n"
 [[ $is_test_mode -gt 0 ]] && display_options
+[[ $is_test_mode -gt 0 ]] && zenity --notification  --window-icon="info" --title ${script_[name]} \
+                                --text="${script_[name]}\nConfiguration loaded!. >$cmdNr<\n" --timeout=1 &  #???
 
 # Checking command-number if given
 if [[ -n "$cmdNr" ]]; then
     if [[ ${id[@]} =~ "$cmdNr" ]]; then
         selection=$cmdNr
     else
-        message_exit "Case '$cmdNr' not defined." 66
+        message_exit "Error with commandline: Case '$cmdNr' not defined." 66
         exit
     fi
 fi
@@ -290,7 +299,7 @@ case $selection in
         eval $command_to_execute & >/dev/null 2>&1
         ;;
     *)
-        message_exit "Case '$selection' not defined." 99
+        message_exit "General error: case '$selection' not defined." 99
         exit
         ;;
 esac
@@ -317,13 +326,3 @@ check_mount2 ( ) { #fct Netzlaufwerk verbunden ? obsolete ???
 
 
 
-# Calculate the number of syncs by dividing the total by the number of sync types
-total_sync_elements=$((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]}))
-num_syncs=$((total_sync_elements / num_sync_elements))
-
-exit 29
-# Ensure the configuration file exists and is readable
-if [ ! -r "${script_[dir]}${script_[config]}" ]; then
-    message_exit "Config-Error: Configuration file '${script_[dir]}${script_[config]}' is not readable." 23
-    exit
-fi
