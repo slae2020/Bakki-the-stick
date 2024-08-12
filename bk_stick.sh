@@ -115,15 +115,14 @@ check_stick() {
 # Function to check if a network drive is mounted, and attempt to mount it if not
 check_mount() {
     local mounted_path=$1
-    local test_subdir=$mounted_path"/." # Arbitrary subdirectory always present for testing
+    local test_subdir=$mounted_path"/."
 
     # Check if the mount-directory is accessible
     if [[ ! -r "$test_subdir" ]]; then
-        mnt_resp=$(/home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path" "${script_[name]}")  # ruft mit sudo den mount $1 auf ??? klappt nicht wg path??
-
-        # Recheck if the directory is accessible after mounting
-        if [[ ! -r "$test_subdir" ]]; then
-            message_exit "Error: Failed (#$mnt_resp) to find mounted or to mount \n'$mounted_path'." 22
+        # Attempt to mount the directory
+        mnt_resp=$(/home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path" )
+        if [[ ! "$mnt_resp" == 0 ]]; then
+            message_exit "Error: $mnt_resp" 22
             exit
         fi
     fi
@@ -137,7 +136,7 @@ check_path() {
     if [[ $path =~ "/media/" ]]; then
         check_stick "$path" "$name"
     fi
-    if [[ $path =~ "/mnt/" ]]; then
+    if [[ $path =~ "mnt/" ]]; then
         check_mount "$path"
     fi
     if [[ !  -r "$path" ]]; then
@@ -184,7 +183,7 @@ while getopts ':c:e:n:vh' OPTION; do
         e) config_elements[editor_prog]=${OPTARG} ;;
         n) cmdNr=${OPTARG} ;;
         v) is_test_mode=0 ;;
-        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-v] [-h] \n   " 11; exit ;;
+        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-v] [-h] \n" 11; exit ;;
     esac
 done
 
@@ -307,22 +306,5 @@ esac
 exit 0
 
 ## ab hier junk
-
-###
-check_mount2 ( ) { #fct Netzlaufwerk verbunden ? obsolete ???
-    local mounted_path=$1
-    local lw=$mounted_path"/." #Beliebiges Unterverzeichnis, das immer da ist, zum testen.
-        ls -A $lw >/dev/null 2>&1
-        if [ $? != 0 ]
-        then
-            /home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path" "${script_[name]}" # ruft mit sudo den mount $1 auf ??? klappt nicht wg path??
-            ls -A $lw >/dev/null 2>&1
-            if [ $? != 0 ]; then   # falls mounten nicht geklappt -> Abbruch, nicht ewig schleifen
-                message_exit "Das hat nicht geklappt!\n'$mounted_path' not mounted." 22
-                exit
-            fi
-        fi
-}
-
 
 
