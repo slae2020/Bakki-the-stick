@@ -1,19 +1,11 @@
 #!/usr/bin/env bash
 
-source declarations.sh
+source declarations.sh 
 source messenge.sh
 source configreader.sh
 source checker.sh
 
 declare -i is_test_mode=1  # 1 for test mode, 0 for normal operation
-
-## Define parameter of sync-group-elements
-#declare -a id2
-#declare -a sync_name
-#declare -a sync_param
-#declare -a sync_dir1
-#declare -a sync_dir2
-#declare -i num_sync_elements=4
 
 # Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -v verbose -h help
 while getopts ':c:e:n:vh' OPTION; do
@@ -53,7 +45,7 @@ read_configuration
 # Extract IDs, names, paths etc.
 #id=($(extract_options_values 'id'))
 
-read_identifier
+#read_identifier
 
 ## Check if id are integers
 #for element in "${id[@]}"; do
@@ -63,7 +55,8 @@ read_identifier
     #fi
 #done
 
-read_options
+#read_options opti1
+read_alloptions
 
 #sync_name=($(extract_options_values 'name')) && replace_placeholders sync_name
 #sync_param=($(extract_options_values 'param')) && replace_placeholders sync_param
@@ -91,10 +84,11 @@ if [[ -n "$cmdNr" ]]; then
 fi
 
 # Loop until a selection is made
+tt="${opti1[@]}"
 while [ -z "$selection" ]; do
     selection=$(zenity --height "350" --width "450" \
         --title "${config_elements[title_strg]}" --text "${config_elements[menue_strg]}" \
-        --list --column="Optionen" "${option[name]}" "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
+        --list --column="Optionen" "${opti1[@]}" "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
     if [ $? -ne 0 ]; then
         message_exit "Dialog canceled by user." 0
         exit

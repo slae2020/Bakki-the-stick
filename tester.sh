@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-#source declarations.sh
+source declarations.sh 
 
 # Display options for selection
 display_options () {
 	local select=$1
     echo .
-    echo "Display var for debugging info:"
+    echo "Display var for debugging info ($select): "
 
 	case $select in
 		1) echo $cmdNr ;;
@@ -33,13 +33,22 @@ display_options () {
 		5)
 		echo "Extracted IDs: ${id[@]}"
 		echo "Extracted NamesO: ${sync_name[@]}"
-		echo "Extracted NamesN: ${option[name]}"
+		echo "Extracted NamesN: ${option[name]};"
 		for i in "${!option[@]}"; do
 			echo -n "$i -->"
 			echo ${option[$i]}
 		done 
 		
 
+		;;
+		6)
+		echo .
+		echo "Extracted IDs: ${id[@]}"
+		echo "Extracted Names: ${opti1[@]}"
+		echo "Extracted 1    : ${opti2[@]}"
+		echo "Extracted 2   s: ${opti3[@]}"
+		echo "Extracted 3   s: ${opti4[@]}"
+		echo "Extracted 4   s: ${opti5[@]}"
 		;;
 	esac
 	echo .

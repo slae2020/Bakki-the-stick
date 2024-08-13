@@ -4,33 +4,6 @@ source declarations.sh
 source checker.sh
 source tester.sh
 
-# Define a placeholder space character for use in a configuration file
-declare -r placeholder_space="#x0020"
-
-# Define standardnames
-declare -r config_stdname="config.xml"
-
-# Define associative arrays with desired elements & first allocation
-declare -A script_=(
-    [dir]=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"/"    # hier auch v
-    [name]=$(basename "${BASH_SOURCE[0]}")                                            #??? configreader.sh?
-    [config]="$config_stdname"
-)
-declare -A config_elements=(
-    [version]=''
-    [version_strg]=''
-    [lang]=''
-    [title_strg]=''
-    [menue_strg]=''
-    [config_strg]=''
-    [editor_prog]=''
-    [prog_strg]='meld'   #????
-    [home_directory]=''
-    [storage_location]=''
-    [standard_path]=''
-    [remote_path]=''
-)
-
 # Function to extract configuration single values one by one
 extract_config_values() {
     local -n config_ref=$1
@@ -58,8 +31,9 @@ extract_options_values() {
 # Function to extract all entries in associated arrays with name_option
 extract_options_values2() {
     local name_option="$1"
-    xml_grep $name_option "${script_[config]}" --text_only 
-    #echo "%&"  # ???
+    #echo $(xml_grep $name_option "${script_[config]}" --text_only | sed -e 's#n#ÖÖÖÖÖ#g')
+    #echo $(xml_grep $name_option "${script_[config]}" --text_only )
+    xml_grep $name_option "${script_[config]}" --text_only
 }
 
 # Function to replace defined placeholder from config-file into string
@@ -85,13 +59,24 @@ replace_placeholders() {
         ref[k]=$(replace_placeholder_strg "${ref[k]}" "$placeholder_space" " ")
     done
 }
-
+# Function to replace specific placeholders after reading
+replace_placeholders2() {
+    local -n ref=$1
+ #echo .
+ #echo ${ref}
+	ref=$(replace_placeholder_strg "$ref" "~" "${config_elements[home_directory]}")
+	ref=$(replace_placeholder_strg "$ref" "\$homeVerz" "${config_elements[home_directory]}")
+    ref=$(replace_placeholder_strg "$ref" "\$stickort" "${config_elements[storage_location]}")
+    ref=$(replace_placeholder_strg "$ref" "\$stdpath" "${config_elements[standard_path]}")
+    ref=$(replace_placeholder_strg "$ref" "\$remotepath" "${config_elements[remote_path]}")
+    ref=$(replace_placeholder_strg "$ref" "$placeholder_space" " ")
+}
 
 # Function to start 
 
 # Ensure the configuration file is set, defaulting to "$config_stdname" if not provided
 check_configname() {
-	[[ -z "${script_[config]}" ]] && script_[config]="${script_[config]:-$config_stdname}"
+	#[[ -z "${script_[config]}" ]] && script_[config]="${script_[config]:-$config_stdname}"
 	[[ "$(dirname "${script_[config]}")"  == "." ]] && script_[config]="${script_[dir]}${script_[config]}"
 	check_path "${script_[config]}"
 }
@@ -116,7 +101,7 @@ read_configuration() {
 
 # Extract IDs
 read_identifier(){
-	id=($(extract_options_values 'id'))
+	id=($(extract_options_values2 'id'))
 
 	# Check if id are integers
 	for element in "${id[@]}"; do
@@ -129,32 +114,53 @@ read_identifier(){
 
 # Extract names, paths etc.
 read_options() {
-	for element in "${!option[@]}"; do
-		#echo "$element"
-		option["$element"]=$(extract_options_values2 "$element")
-		# replace_placeholders option["$element"]  # ???
-	done
+	local -n option_ref=$1
+	count=$2
 	
-#sync_name=($(extract_options_values 'name')) && replace_placeholders sync_name
-#options[sync_name]=$(extract_options_values2 'name')
-#sync_param=($(extract_options_values 'param')) && replace_placeholders sync_param
-#sync_dir1=($(extract_options_values 'dir1')) && replace_placeholders sync_dir1
-#sync_dir2=($(extract_options_values 'dir2')) && replace_placeholders sync_dir2
+echo .
+echo "."${option_ref[0]}
+echo $count
 
-	# Check if the number of syncs matches the number of IDs    check spaeter???
-#num_param=$((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]} ))
-#rate=$(( $num_param % $num_elements ))
-#if [ $rate -ne 0 ]; then
-    #message_exit "Missing data: Config-file with '$num_param MOD $num_sync_elements' item(s) is not well-filled." 45
-    #exit
-#fi
+	if [[ -n ${option_ref[0]} ]]; then
+		option_ref=($(extract_options_values2 ${option_ref[0]}))
+		
+		count=${#option_ref[@]} 
+		replace_placeholders option_ref
+	fi
+	#echo $count
+}
+
+# Extract id, names, paths etc.
+read_alloptions() {
+	local -i num_options=0
+	read_identifier
+
+	#num_options=$(( $num_options + $(read_options opti1) )) 
+	#num_options=$(( $num_options + $(read_options opti2) )) 
+	#num_options=$(( $num_options + $(read_options opti3) )) 
+	#num_options=$(( $num_options + $(read_options opti4) )) 
+	#num_options=$(( $num_options + $(read_options opti5) )) 
+	#num_options=$(( $num_options + $(read_options opti6) )) 
+	#num_options=$(( $num_options + $(read_options opti7) )) 
+echo "4$"
+read_options opti1 num_options
+read_options opti2 num_options
+
+echo "4$"
+
+	# Check correct count of options
+	rate=$(( $num_options % $num_elements ))
+	if [ $rate -ne 0 ]; then
+		message_exit "Missing data: Config-file with '$num_options MOD $num_elements' item(s) is not well-filled." 45
+		exit
+	fi
 }
 
 # Reading configuration completed
 done_configuration() {
 [[ $is_test_mode -gt 0 ]] && echo "Konfiguration eingelesen! >$cmdNr<\n"
 [[ $is_test_mode -gt 0 ]] && echo "Starte....(Testversion) ......\n"
-[[ $is_test_mode -gt 0 ]] && display_options 5
+[[ $is_test_mode -gt 0 ]] && display_options 6
 [[ $is_test_mode -gt 0 ]] && zenity --notification  --window-icon="info" --title ${script_[name]} \
                                 --text="${script_[name]}\nConfiguration loaded!. >$cmdNr<\n" --timeout=1 &  #???
 }
@@ -170,9 +176,13 @@ is_test_mode=1
 check_configname
 read_configuration
 
-read_identifier
-read_options
+read_alloptions
 
 done_configuration
 
 exit 0
+
+
+### junk 
+
+tr '\n' ' ' # the easiest?
