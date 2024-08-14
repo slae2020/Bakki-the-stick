@@ -2,6 +2,23 @@
 
 source messenge.sh
 
+# Function to check if a path is readable
+check_path() {
+    local path=$1
+    local name=$2
+
+    if [[ $path =~ "/media/" ]]; then
+        check_stick "$path" "$name"
+    fi
+    if [[ $path =~ "mnt/" ]]; then
+        check_mount "$path"
+    fi
+    if [[ !  -r "$path" ]]; then
+        path="${path:-   }"
+        message_exit "Config-Error: Path \n'$path'\n is not readable." 23
+    fi
+}
+
 # Function to check if a USB stick is present
 check_stick() {
     local stick_path=$1
@@ -10,10 +27,7 @@ check_stick() {
         if ls -A "$stick_path" >/dev/null 2>&1; then
             break
         else
-            zenity --question --title ${script_[name]} --width="350" --text="'$stick_name' is missing!\n[  '$stick_path' not found  ]\nDo you want to try again? (21)"
-            if [ $? -ne 0 ]; then
-                exit 21
-            fi
+            ask_to_continue "'$stick_name' is missing: [  '$stick_path' not found  ]\n\nDo you want to try again?" 21           
         fi
     done
 }
@@ -29,34 +43,42 @@ check_mount() {
         mnt_resp=$(/home/stefan/prog/bakki/mounti/mounter.sh "$mounted_path" )
         if [[ ! "$mnt_resp" == 0 ]]; then
             message_exit "Error: $mnt_resp" 22
-            exit
         fi
     fi
 }
 
-# Function to check if a path is readable
-check_path() {
-    local path=$1
-    local name=$2
+# Validate and modify a path based on certain conditions
+check_name_is_set() {
+    # Parameters:
+    #   $1 - standard_path: The standard path to check
+    #   $2 - custom_path: The custom path to use if provided
 
-    if [[ $path =~ "/media/" ]]; then
-        check_stick "$path" "$name"
+    local standard_path=$1
+    local custom_path=${2:-$standard_path}  # Use custom_path if provided, otherwise use standard_path
+
+    # Exit if standard_path is empty
+    if [[ -z "$standard_path" ]]; then
+        echo "Error: Standard path is not set." >&2
+        exit 1
     fi
-    if [[ $path =~ "mnt/" ]]; then
-        check_mount "$path"
+
+    # Modify custom_path if its directory is the current directory
+    if [[ "$(dirname "$custom_path")" == "." ]]; then
+        custom_path="${script_[dir]}$custom_path"      # ???? script[dir] raus???
     fi
-    if [[ !  -r "$path" ]]; then
-        path="${path:-   }"
-        message_exit "Config-Error: Path \n'$path'\n is not readable." 23
-        exit
-    fi
+
+    check_path "$custom_path"
+
+    echo "$custom_path"
 }
+
 # Function to check availibility of a program
 check_prog() {
     local prog_name=$1
 
     if [[ ! -x "$(command -v $prog_name)" ]]; then
         message_exit "Config-Error: program '$prog_name' not found." 24
-        exit
     fi
 }
+
+#check_stick "/media/slaekim" "SLAE77" 

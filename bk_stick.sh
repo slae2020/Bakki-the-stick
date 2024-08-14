@@ -7,6 +7,10 @@ source checker.sh
 
 declare -i is_test_mode=1  # 1 for test mode, 0 for normal operation
 
+#init_messenger
+script_[name]=$(basename "${BASH_SOURCE[0]}")  # ???
+messenger_top_text="${script_[name]}"
+
 # Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -v verbose -h help
 while getopts ':c:e:n:vh' OPTION; do
     case "$OPTION" in
@@ -18,60 +22,7 @@ while getopts ':c:e:n:vh' OPTION; do
     esac
 done
 
-check_configname
-## Ensure the configuration file is set, defaulting to "config.xml" if not provided
-#[[ -z "${script_[config]}" ]] && script_[config]="${script_[config]:-config.xml}"
-#[[ "$(dirname "${script_[config]}")"  == "." ]] && script_[config]="${script_[dir]}${script_[config]}"
-#check_path "${script_[config]}"
-
-# Reading configuration file
-#[[ $is_test_mode -gt 0 ]] && zenity --notification  --window-icon="info" --title ${script_[name]} \
-                                #--text="${script_[name]}\nReading configuration file \n\n${script_[config]}." --timeout=1 &  #???
-
-read_configuration
-
-# Call function to extract values
-#extract_config_values config_elements
-
-# Replace placeholders from config
-#config_elements[menue_strg]=$(replace_placeholder_strg "${config_elements[menue_strg]}" "\$version" "${config_elements[version]}")
-#config_elements[menue_strg]=$(replace_placeholder_strg "${config_elements[menue_strg]}" "\$verstxt" "${config_elements[version_strg]}")
-
-## Ensure the editor-prog is set, defaulting to "gedit" if not provided & checking existence
-#[[ -z "${config_elements[editor_prog]}" ]] && config_elements[editor_prog]="${config_elements[editor_prog]:-gedit}"
-#check_prog "${config_elements[editor_prog]}"
-#check_prog "${config_elements[prog_strg]}"
-
-# Extract IDs, names, paths etc.
-#id=($(extract_options_values 'id'))
-
-#read_identifier
-
-## Check if id are integers
-#for element in "${id[@]}"; do
-    #if ! [[ "$element" =~ ^[0-9]+$ ]]; then
-        #message_exit "Config-Error: identifier '$element' in config-file has to be an integer!" 32
-        #exit
-    #fi
-#done
-
-#read_options opti1
-read_alloptions
-
-#sync_name=($(extract_options_values 'name')) && replace_placeholders sync_name
-#sync_param=($(extract_options_values 'param')) && replace_placeholders sync_param
-#sync_dir1=($(extract_options_values 'dir1')) && replace_placeholders sync_dir1
-#sync_dir2=($(extract_options_values 'dir2')) && replace_placeholders sync_dir2
-
-## Check if the number of syncs matches the number of IDs
-#num_param=$((${#sync_name[@]} + ${#sync_param[@]} + ${#sync_dir1[@]} + ${#sync_dir2[@]} ))
-#rate=$(( $num_param % $num_elements ))
-#if [ $rate -ne 0 ]; then
-    #message_exit "Missing data: Config-file with '$num_param MOD $num_sync_elements' item(s) is not well-filled." 45
-    #exit
-#fi
-
-done_configuration
+read_configuration "${script_[config]}"
 
 # Checking command-number if given
 if [[ -n "$cmdNr" ]]; then

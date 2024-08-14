@@ -52,6 +52,7 @@ declare -A option=(
 	[dir2]=''
 )
 
+ script_[name]=$(basename "${BASH_SOURCE[0]}")
 #return 
 #### junk
 

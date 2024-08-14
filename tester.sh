@@ -19,10 +19,6 @@ display_options () {
 		3)
 		echo .
 		echo "Extracted IDs: ${id[@]}"
-		echo "Extracted Names: ${sync_name[@]}"
-		echo "Extracted Param: ${sync_param[@]}"
-		echo "Extracted dir 1: ${sync_dir1[@]}"
-		echo "Extracted dir 2: ${sync_dir2[@]}"
 		;;
 		4)
 		for i in "${!config_elements[@]}"; do
