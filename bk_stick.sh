@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# zur sicherheit 08.14.2024 18:16:22
 
 source declarations.sh 
 source messenge.sh
