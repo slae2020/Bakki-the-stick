@@ -36,16 +36,19 @@ fi
 
 # Loop until a selection is made
 tt="${opti1[@]}"
+echo $tt
 while [ -z "$selection" ]; do
     #selection=$(zenity --height "350" --width "450" \
         #--title "${config_elements[title_strg]}" --text "${config_elements[menue_strg]}" \
         #--list --column="Optionen" "${opti1[@]}" "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
-    selection=$(ask_to_choose "${config_elements[title_strg]}" "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
-    if [ $? -ne 0 ]; then
-        message_exit "Dialog canceled by user." 0
-        exit
+    selection=$(ask_to_choose "${config_elements[title_strg]}" "${config_elements[menue_strg]}" \
+			"Optionen" "$tt" "${opti1[@]}") # "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
+    if [ $selection == $is_cancel ]; then
+        message_exit "Dialog canceled by user." 0        
     fi
 done
+
+teststop 55
 
 # Match foundIndex to selection
 for i in "${!sync_name[@]}"; do

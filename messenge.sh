@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# For returning string while aborting message
+declare -r is_cancel="#x0020"
+
 declare messenger_top_text="Meldung"
 declare mheight=350
 declare mwidth=250
@@ -44,18 +47,28 @@ ask_to_continue() {
 
 # Ask for selction out of list
 ask_to_choose() {
-	local txt=$1
-	local -a list_options=$2 #"1 2 3 4"
-	local answer="0"
+	local tit=$1  
+	local txt=$2
+	local col=$3
+	local -a list_options=$4 #"1 2 3 4"
+	local answer=$is_cancel
 	
 	mheight=350 # ??? Uebergabe?
 	mwidth=450
 	
 	answer=$(zenity --list --height $mheight --width $mwidth \
-			 --title "$messenger_top_text" --text="$txt" \
-			 --column="Waehle weise" ${list_options} "A \nB cc de" )
+			 --title "$messenger_top_text" --text="$txt" --column="$col" \
+			 ${list_options} "kw " "noch was" )
+
+	#echo
+	#ee=$?   "A \nB cc de"
+	#echo "%%"$ee
+	
+	if [ $? -ne 0 ]; then 
+		answer=$is_cancel
+	fi
+	
 	echo $answer
-	echo "0"
 }
 #selection=$(zenity --height "350" --width "450" \
 #        --title "${config_elements[title_strg]}" --text "${config_elements[menue_strg]}" \
@@ -69,9 +82,31 @@ return
 
 #ask_to_continue "weiter?" 21
 
-echo .
-echo $(ask_to_choose "Auswahl heute"  "1 2 3 4")
+# Check if variable is an array [$1: variable name]
+function is_array() {
+    [[ "$(declare -p -- "$1")" == "declare -a "* ]] && echo 0 || echo 1
+}
 
-ask_to_continue "weiter?" 21
+# Check if variable is a dict [$1: variable name]
+function is_dict() {
+    [[ "$(declare -p -- "$1")" == "declare -A "* ]] && return 0 || return 1
+}
+
+
+declare -a testi="0 10 10w 22"
+a=1
+b="ww"
+
+echo "99"
+echo $(is_array a)
+echo $(is_array b)
+echo $(is_array testi)
+
+
+
+echo .
+echo ">"$(ask_to_choose "sfkdlkf" "Version" "Optionen" "${testi}" )"<"
+
+#ask_to_continue "weiter?" 21
 
 exit 0
