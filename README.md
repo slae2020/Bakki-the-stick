@@ -4,6 +4,6 @@
 
 > Nutzt *meld, zenity* und *rsync*
 
-> slae 2018-24
+> slae 2018-2024
 
 >                         ...
