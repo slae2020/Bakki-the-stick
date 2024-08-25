@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+# Declarations for Bakki only
 
 # Define a placeholder space character for use in a configuration file
-declare -r placeholder_space="#x0020"
+declare placeholder_space="#x0020"
 
 # Define standardnames
-declare -r config_stdname="config.xml"
+declare config_stdname="config.xml"
 
 # Define associative arrays with desired elements & first allocation
 declare -A script_=(
@@ -42,25 +43,27 @@ declare -a opti7; opti7[0]=""
 # Workparameters
 declare -i cmdNr=0 && unset cmdNr
 declare selection=""
+declare selectedIndex=""
+
+ script_[name]=$(basename "${BASH_SOURCE[0]}")
+#return 
 
 
 
-declare -A option=(
+#### junk
+
+declare -A optionKW=(
 	[name]=''
 	[param]=''
 	[dir1]=''
 	[dir2]=''
 )
 
- script_[name]=$(basename "${BASH_SOURCE[0]}")
-#return 
-#### junk
 
-
-declare -a sync_name
-declare -a sync_param
-declare -a sync_dir1
-declare -a sync_dir2
+#declare -a sync_name     #oppti1
+#declare -a sync_param    
+#declare -a sync_dir1    #optti2
+#declare -a sync_dir2    #oppti3
 
 declare -a template_name
 declare -a template_prog

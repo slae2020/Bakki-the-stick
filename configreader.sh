@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
-source declarations.sh
 source checker.sh
-source tester.sh
+source messenge.sh
+
+#init_messenger
+script_[name]=$(basename "${BASH_SOURCE[0]}")  # ???
+messenger_top_text="${script_[name]}"
 
 # Function to extract configuration single values one by one
 extract_config_values() {
@@ -157,7 +160,7 @@ read_configuration() {
 
     done_configuration ${script_[config]}
     
-    echo ${script_[config]}
+    [[ $is_test_mode -gt 0 ]] && echo ${script_[config]}
 }
 
 return
@@ -168,9 +171,9 @@ is_test_mode=1
 
 read_configuration "/home/stefan/perl/Bakki-the-stickv1.2beta/config_2408.xml"
 
-#read_alloptions
+read_alloptions
 
-#done_configuration
+done_configuration
 
 exit 0
 

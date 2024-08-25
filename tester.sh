@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-source declarations.sh 
+#source declarations.sh 
 
 # Display options for selection
 display_options () {
 	local select=$1
     echo .
-    echo "Display var for debugging info ($select): "
+    echo "Testmodus: Display varis for debugging info ($select): "
 
 	case $select in
 		1) echo $cmdNr ;;
@@ -19,6 +19,7 @@ display_options () {
 		3)
 		echo .
 		echo "Extracted IDs: ${id[@]}"
+		declare -p opti1
 		;;
 		4)
 		for i in "${!config_elements[@]}"; do
@@ -28,14 +29,10 @@ display_options () {
 		;;
 		5)
 		echo "Extracted IDs: ${id[@]}"
-		echo "Extracted NamesO: ${sync_name[@]}"
-		echo "Extracted NamesN: ${option[name]};"
-		for i in "${!option[@]}"; do
-			echo -n "$i -->"
-			echo ${option[$i]}
-		done 
+		echo "Extracted NamesO: ${opti1[@]}"
+		#echo "Extracted NamesN: ${option[name]};"
+		declare -p option
 		
-
 		;;
 		6)
 		echo .

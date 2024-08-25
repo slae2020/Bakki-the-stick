@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 source declarations.sh 
-source messenge.sh
+#source messenge.sh
 source configreader.sh
-source checker.sh
+source tester.sh
 
 declare -i is_test_mode=1  # 1 for test mode, 0 for normal operation
 
 #init_messenger
-script_[name]=$(basename "${BASH_SOURCE[0]}")  # ???
-messenger_top_text="${script_[name]}"
+#script_[name]=$(basename "${BASH_SOURCE[0]}")  # ???
+#messenger_top_text="${script_[name]}"
 
 # Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -v verbose -h help
 while getopts ':c:e:n:vh' OPTION; do
@@ -24,7 +24,7 @@ done
 
 read_configuration "${script_[config]}"
 
-# Checking command-number if given
+# Checking command-number if given & defined
 if [[ -n "$cmdNr" ]]; then
     if [[ ${id[@]} =~ "$cmdNr" ]]; then
         selection=$cmdNr
@@ -35,45 +35,39 @@ if [[ -n "$cmdNr" ]]; then
 fi
 
 # Loop until a selection is made
-tt="${opti1[@]}"
-echo $tt
 while [ -z "$selection" ]; do
-    #selection=$(zenity --height "350" --width "450" \
-        #--title "${config_elements[title_strg]}" --text "${config_elements[menue_strg]}" \
-        #--list --column="Optionen" "${opti1[@]}" "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
     selection=$(ask_to_choose "${config_elements[title_strg]}" "${config_elements[menue_strg]}" \
-			"Optionen" "$tt" "${opti1[@]}") # "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
-    if [ $selection == $is_cancel ]; then
-        message_exit "Dialog canceled by user." 0        
+			"Optionen"    opti1 "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
+    if [[ $selection == $is_cancel ]]; then
+        message_exit "Dialog canceled by user." 0       
+        exit 
     fi
 done
 
-teststop 55
-
-# Match foundIndex to selection
-for i in "${!sync_name[@]}"; do
-    if [[ "${sync_name[$i]}" == "$selection" ]]; then
-        foundIndex=$i
+# Match selectedIndex to selection
+for i in "${!opti1[@]}"; do
+    if [[ "${opti1[$i]}" == "$selection" ]]; then
+        selectedIndex=$i
         break
     fi
     if [ "${id[$i]}" -eq "$selection" >/dev/null 2>&1 ]; then
-        foundIndex=$i
+        selectedIndex=$i
         break
     fi
 done
 
-# Check if foundIndex is set and within bounds (to make sure)
-if [[ -n $foundIndex && foundIndex -ge 0 && foundIndex -lt ${#sync_name[@]} ]]; then
-    selection=${sync_name[$foundIndex]}
+# Check if selectedIndex is set and within bounds (to make sure)
+if [[ -n $selectedIndex && selectedIndex -ge 0 && selectedIndex -lt ${#opti1[@]} ]]; then
+    selection=${opti1[$selectedIndex]}
 fi
 
 [[ $is_test_mode -gt 0 ]] && echo "Selected: $selection" # Testversion
-[[ $is_test_mode -gt 0 ]] && echo $selection"+++ "$foundIndex" +++"${id[$foundIndex]}"##"${sync_prog[$foundIndex]}"<>""${sync_path[$foundIndex]}${sync_file[$foundIndex]}" #Testoption
+[[ $is_test_mode -gt 0 ]] && echo $selection"+++ "$selectedIndex" +++"${id[$selectedIndex]}"##"${sync_prog[$selectedIndex]}"<>""${sync_path[$selectedIndex]}${sync_file[$selectedIndex]}" #Testoption
 
 # Execution with the selected option
 case $selection in
     ${config_elements[prog_strg]})
-        command_to_execute="${config_elements[prog_strg]}" #&& check_prog "$command_to_execute"
+        command_to_execute="${config_elements[prog_strg]}" 
         eval $command_to_execute & >/dev/null 2>&1
         ;;
     ${config_elements[config_strg]})
@@ -82,10 +76,10 @@ case $selection in
         command_to_execute="${config_elements[editor_prog]} $xfile"
         eval $command_to_execute & >/dev/null 2>&1
         ;;
-    ${sync_name[$foundIndex]})
-        check_path "${sync_dir1[$foundIndex]}" "${sync_name[$foundIndex]}"
-        check_path "${sync_dir2[$foundIndex]}" "${sync_name[$foundIndex]}"
-        command_to_execute="${config_elements[prog_strg]} ${sync_dir1[$foundIndex]} ${sync_dir2[$foundIndex]}" #&& check_prog "$command_to_execute"
+    ${opti1[$selectedIndex]})
+        check_path "${opti2[$selectedIndex]}" "${opti1[$selectedIndex]}"
+        check_path "${opti3[$selectedIndex]}" "${opti1[$selectedIndex]}"
+        command_to_execute="${config_elements[prog_strg]} ${opti2[$selectedIndex]} ${opti3[$selectedIndex]}" 
         eval $command_to_execute & >/dev/null 2>&1
         ;;
     *)

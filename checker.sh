@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source messenge.sh
+#source messenge.sh
 
 # Function to check if a path is readable
 check_path() {
