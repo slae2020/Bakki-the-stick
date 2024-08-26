@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
+source declarations.sh
 source checker.sh
-source messenge.sh
+source tester.sh
 
 #init_messenger
-script_[name]=$(basename "${BASH_SOURCE[0]}")  # ???
-messenger_top_text="${script_[name]}"
+messenger_top_text=${script_[name]^^*}
 
 # Function to extract configuration single values one by one
 extract_config_values() {
@@ -28,7 +28,7 @@ extract_config_values() {
 # Function to extract all entries in associated arrays with name_option
 extract_options_values() {
     local name_option="$1"
-#echo "ksksk""${script_[config]}"
+#echo "ksksk""${script_[config]}"   ??? weg alles
     #echo $(xml_grep $name_option "${script_[config]}" --text_only | sed -e 's#n#ÖÖÖÖÖ#g')
     #echo $(xml_grep $name_option "${script_[config]}" --text_only )
     xml_grep $name_option "${script_[config]}" --text_only
@@ -58,11 +58,11 @@ replace_placeholders() {
     done
 }
 
-# Function to start
+# Functions to start
 
 # Extract IDs
 read_identifier(){
-	local -n option_ref=$1
+    local -n option_ref=$1
 
     option_ref=($(extract_options_values 'id'))
 
@@ -134,14 +134,14 @@ read_alloptions() {
 done_configuration() {
 [[ $is_test_mode -gt 0 ]] && echo "Konfiguration eingelesen! >$cmdNr<\n"
 [[ $is_test_mode -gt 0 ]] && echo "Starte....${script_[name]} (Testversion) ......\n"
-[[ $is_test_mode -gt 0 ]] && display_options 3
-[[ $is_test_mode -gt 0 ]] && message_notification "Configuration \n'$1'\nloaded!.      >$cmdNr<\n" 1 &  
+[[ $is_test_mode -gt 0 ]] && display_options 5
+[[ $is_test_mode -gt 0 ]] && message_notification "Configuration \n'$1'\nloaded!.      >$cmdNr<\n" 1 &
 }
 
 # Reading configuration file
 read_configuration() {
-    script_[config]=$(check_name_is_set $config_stdname $1)                   
-    
+    script_[config]=$(check_path_is_set $config_stdname $1)
+
     [[ $is_test_mode -gt 0 ]] && message_notification "Reading configuration file \n\n${script_[config]}." 1
 
     # Call function to extract values
@@ -159,7 +159,7 @@ read_configuration() {
     read_alloptions ${script_[config]}
 
     done_configuration ${script_[config]}
-    
+
     [[ $is_test_mode -gt 0 ]] && echo ${script_[config]}
 }
 

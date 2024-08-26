@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
 
-source declarations.sh 
-#source messenge.sh
 source configreader.sh
 source tester.sh
 
 declare -i is_test_mode=1  # 1 for test mode, 0 for normal operation
-
-#init_messenger
-#script_[name]=$(basename "${BASH_SOURCE[0]}")  # ???
-#messenger_top_text="${script_[name]}"
 
 # Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -v verbose -h help
 while getopts ':c:e:n:vh' OPTION; do
@@ -36,13 +30,15 @@ fi
 
 # Loop until a selection is made
 while [ -z "$selection" ]; do
+	setdisplay 350 450
     selection=$(ask_to_choose "${config_elements[title_strg]}" "${config_elements[menue_strg]}" \
-			"Optionen"    opti1 "${config_elements[prog_strg]}" "${config_elements[config_strg]}")
+			""    opti1 "${config_elements[prog_strg]}" "${config_elements[config_strg]}")  # "" oder Optionen oder Options ???
     if [[ $selection == $is_cancel ]]; then
         message_exit "Dialog canceled by user." 0       
         exit 
     fi
 done
+resetdisplay
 
 # Match selectedIndex to selection
 for i in "${!opti1[@]}"; do

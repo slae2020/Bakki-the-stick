@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
-#source messenge.sh
+source messenge.sh
+
+declare dir_usb="media/"
+declare dir_mnt="mnt/"
 
 # Function to check if a path is readable
 check_path() {
     local path=$1
     local name=$2
 
-    if [[ $path =~ "/media/" ]]; then
-        check_stick "$path" "$name"
+    if [[ $path =~ $dir_usb ]]; then
+        check_usb "$path" "$name"
     fi
-    if [[ $path =~ "mnt/" ]]; then
+    if [[ $path =~ $dir_mnt ]]; then
         check_mount "$path"
     fi
     if [[ !  -r "$path" ]]; then
@@ -20,14 +23,14 @@ check_path() {
 }
 
 # Function to check if a USB stick is present
-check_stick() {
+check_usb() {
     local stick_path=$1
     local stick_name=$2
     while true; do
         if ls -A "$stick_path" >/dev/null 2>&1; then
             break
         else
-            ask_to_continue "'$stick_name' is missing: [  '$stick_path' not found  ]\n\nDo you want to try again?" 21           
+            ask_to_continue "'$stick_name' is missing: [  '$stick_path' not found  ]\n\nDo you want to try again?" 21
         fi
     done
 }
@@ -48,28 +51,29 @@ check_mount() {
 }
 
 # Validate and modify a path based on certain conditions
-check_name_is_set() {
+check_path_is_set() {
     # Parameters:
-    #   $1 - standard_path: The standard path to check
-    #   $2 - custom_path: The custom path to use if provided
+    #   $1 - local_std_path: The standard path to check
+    #   $2 - local_cust_path: The custom path to use if provided
 
-    local standard_path=$1
-    local custom_path=${2:-$standard_path}  # Use custom_path if provided, otherwise use standard_path
+    local local_std_path=$1
+    local local_cust_path=${2:-$local_std_path}  # Use local_cust_path if provided, otherwise use standard_path
+    local local_dir=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"
 
-    # Exit if standard_path is empty
-    if [[ -z "$standard_path" ]]; then
+    # Exit if local_std_path is empty
+    if [[ -z "$local_std_path" ]]; then
         echo "Error: Standard path is not set." >&2
         exit 1
     fi
 
-    # Modify custom_path if its directory is the current directory
-    if [[ "$(dirname "$custom_path")" == "." ]]; then
-        custom_path="${script_[dir]}$custom_path"      # ???? script[dir] raus???
+    # Modify local_cust_path if its directory is the current directory
+    if [[ "$(dirname "$local_cust_path")" == "." ]]; then
+        local_cust_path="$local_dir$local_cust_path"
     fi
 
-    check_path "$custom_path"
-
-    echo "$custom_path"
+    check_path "$local_cust_path"
+    #return:
+    echo "$local_cust_path"
 }
 
 # Function to check availibility of a program
@@ -81,4 +85,8 @@ check_prog() {
     fi
 }
 
-#check_stick "/media/slaekim" "SLAE77" 
+return
+
+#check_usb "/media/slaekim" "SLAE77"
+
+check_mount "/mnt/iserv_laettig/Filesö"

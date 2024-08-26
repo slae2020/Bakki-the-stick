@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
-# Declarations for Bakki only
+
+# Define general parameters for config-file
+declare -A script_=(
+    [dir]=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"
+    [name]=$(basename "$(readlink -f "$0")" .sh)
+    [config]="$config_stdname"
+)
 
 # Define a placeholder space character for use in a configuration file
 declare placeholder_space="#x0020"
@@ -7,21 +13,20 @@ declare placeholder_space="#x0020"
 # Define standardnames
 declare config_stdname="config.xml"
 
+###############################
+# Declarations for Bakki only #
+###############################
+
 # Define associative arrays with desired elements & first allocation
-declare -A script_=(
-    [dir]=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"/"    # hier auch v
-    [name]=$(basename "${BASH_SOURCE[0]}")                                            #??? configreader.sh?
-    [config]="$config_stdname"
-)
 declare -A config_elements=(
     [version]=''
     [version_strg]=''
-    [lang]=''
+    [lang]='en-GB'
     [title_strg]=''
     [menue_strg]=''
     [config_strg]=''
     [editor_prog]=''
-    [prog_strg]='meld'   #????
+    [prog_strg]='meld'
     [home_directory]=''
     [storage_location]=''
     [standard_path]=''
@@ -45,23 +50,22 @@ declare -i cmdNr=0 && unset cmdNr
 declare selection=""
 declare selectedIndex=""
 
- script_[name]=$(basename "${BASH_SOURCE[0]}")
-#return 
+#return
 
 
 
 #### junk
 
-declare -A optionKW=(
-	[name]=''
-	[param]=''
-	[dir1]=''
-	[dir2]=''
-)
+#declare -A optionKW=(
+    #[name]=''
+    #[param]=''
+    #[dir1]=''
+    #[dir2]=''
+#)
 
 
 #declare -a sync_name     #oppti1
-#declare -a sync_param    
+#declare -a sync_param
 #declare -a sync_dir1    #optti2
 #declare -a sync_dir2    #oppti3
 

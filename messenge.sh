@@ -7,8 +7,18 @@ declare messenger_top_text="Message"
 declare messenger_sub_text="Please choose"
 declare messenger_column1_text="Options"
 
-declare dialog_height=350
-declare dialog_width=250
+declare dialog_height
+declare dialog_width
+
+# Change display-size h & w
+setdisplay() {
+	dialog_height=$1
+	dialog_width=$2
+}
+resetdisplay() {
+	dialog_height=350
+	dialog_width=250
+}
 
 # Check if variable is an array [$1: variable name]
 function is_array() {
@@ -36,7 +46,7 @@ message_exit() {
     txt=$(echo "$txt" | sed "s|: |:\n|")
 
     if [[ $err -gt 0 ]]; then
-        zenity --error --width $dialog_width --title "$messenger_top_text" --text="$txt ($err)"
+        zenity --error --height $dialog_height --width $dialog_width --title "$messenger_top_text" --text="$txt ($err)"
     fi
     exit $err
     #return $err
@@ -48,7 +58,7 @@ message_notification() {
     local -i time=$2
 
     if [[ $time -gt 0 ]]; then
-        zenity --notification  --window-icon="info" --text="$messenger_top_text\n""$txt" --timeout=$time &
+        zenity --notification  --height $dialog_height --width $dialog_width --window-icon="info" --text="$messenger_top_text\n""$txt" --timeout=$time &
     fi
 }
 
@@ -59,7 +69,7 @@ ask_to_continue() {
     err="${err:-1}"
     txt=$(echo "$txt" | sed "s|: |:\n|")
 
-    zenity --question --width $dialog_width --title "$messenger_top_text" --text="$txt ($err)"
+    zenity --question --height $dialog_height --width $dialog_width --title "$messenger_top_text" --text="$txt ($err)"
     if [ $? -ne 0 ]; then
         exit $err
     fi
@@ -96,17 +106,16 @@ ask_to_choose() {
     dialog_texts[2]=${dialog_texts[2]:-$messenger_sub_text}
     dialog_texts[3]=${dialog_texts[3]:-$messenger_column1_text}
 
-    dialog_height=350 # ??? Uebergabe?
-    dialog_width=450
-
     answer=$(zenity --list --height $dialog_height --width $dialog_width \
              --title "${dialog_texts[1]}" --text="${dialog_texts[2]}" \
-             --column="${dialog_texts[3]}" "${main_options[@]}" )
+             --column="${dialog_texts[3]}" "${main_options[@]}" )    
     if [ $? -ne 0 ]; then
         answer=$is_cancel
     fi
     echo $answer
 }
+
+resetdisplay
 
 return
 
@@ -122,7 +131,7 @@ testi[1]="10"
 testi[2]=" 10w"
 testi[3]="22   "
 testi[5]=" Versuch Luecke  "
-testi[7]="osz"$is_cancel"iserv"
+testi[7]="o_cancel_ iserv und dannnoch anz lanmge rText zum Ansehen \nund Lesen vor allem! \n"
 a=1
 b="ww, die absoluet Extraportion"
 
@@ -139,7 +148,12 @@ declare -p testi
 
 echo .
 #echo ">"$(ask_to_choose "MyHuhu" testi "MyVersion" "MyOptionen"  "$a" "$b")"<"
-echo ">"$(ask_to_choose "" "" "" testi )"<"
+
+setdisplay 750 350
+echo ">"$(ask_to_choose "" "1" "" testi )"<"
+resetdisplay
+
+echo ">"$(ask_to_choose "" "2" "" testi )"<"
 
 #ask_to_continue "weiter?" 21
 
