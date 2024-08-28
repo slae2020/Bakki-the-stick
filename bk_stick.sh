@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source configreader.sh
-source tester.sh
 
 declare -i is_test_mode=1  # 1 for test mode, 0 for normal operation
 
@@ -20,7 +19,7 @@ read_configuration "${script_[config]}"
 
 # Checking command-number if given & defined
 if [[ -n "$cmdNr" ]]; then
-    if [[ ${id[@]} =~ "$cmdNr" ]]; then
+    if printf '%s\n' "${id[@]}" | grep -q -w "$cmdNr"; then
         selection=$cmdNr
     else
         message_exit "Error with commandline: Case '$cmdNr' not defined." 66
@@ -30,12 +29,12 @@ fi
 
 # Loop until a selection is made
 while [ -z "$selection" ]; do
-	setdisplay 350 450
+    setdisplay 350 450
     selection=$(ask_to_choose "${config_elements[title_strg]}" "${config_elements[menue_strg]}" \
-			""    opti1 "${config_elements[prog_strg]}" "${config_elements[config_strg]}")  # "" oder Optionen oder Options ???
+            ""    opti1 "${config_elements[prog_strg]}" "${config_elements[config_strg]}")  # "" oder Optionen oder Options ???
     if [[ $selection == $is_cancel ]]; then
-        message_exit "Dialog canceled by user." 0       
-        exit 
+        message_exit "Dialog canceled by user." 0
+        exit
     fi
 done
 resetdisplay
@@ -58,24 +57,22 @@ if [[ -n $selectedIndex && selectedIndex -ge 0 && selectedIndex -lt ${#opti1[@]}
 fi
 
 [[ $is_test_mode -gt 0 ]] && echo "Selected: $selection" # Testversion
-[[ $is_test_mode -gt 0 ]] && echo $selection"+++ "$selectedIndex" +++"${id[$selectedIndex]}"##"${sync_prog[$selectedIndex]}"<>""${sync_path[$selectedIndex]}${sync_file[$selectedIndex]}" #Testoption
+[[ $is_test_mode -gt 0 ]] && echo $selection"+++ "$selectedIndex" +++"${id[$selectedIndex]}"##"${opti2[$selectedIndex]}"<-->"${opti3[$selectedIndex]}"" #Testoption
 
 # Execution with the selected option
 case $selection in
     ${config_elements[prog_strg]})
-        command_to_execute="${config_elements[prog_strg]}" 
+        command_to_execute="${config_elements[prog_strg]}"
         eval $command_to_execute & >/dev/null 2>&1
         ;;
     ${config_elements[config_strg]})
-        xfile="${script_[dir]}${script_[config]}"
-        check_path "$xfile" "nil"
-        command_to_execute="${config_elements[editor_prog]} $xfile"
+        command_to_execute="${config_elements[editor_prog]} ${script_[config]}"
         eval $command_to_execute & >/dev/null 2>&1
         ;;
     ${opti1[$selectedIndex]})
         check_path "${opti2[$selectedIndex]}" "${opti1[$selectedIndex]}"
         check_path "${opti3[$selectedIndex]}" "${opti1[$selectedIndex]}"
-        command_to_execute="${config_elements[prog_strg]} ${opti2[$selectedIndex]} ${opti3[$selectedIndex]}" 
+        command_to_execute="${config_elements[prog_strg]} ${opti2[$selectedIndex]} ${opti3[$selectedIndex]}"
         eval $command_to_execute & >/dev/null 2>&1
         ;;
     *)

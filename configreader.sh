@@ -7,6 +7,22 @@ source tester.sh
 #init_messenger
 messenger_top_text=${script_[name]^^*}
 
+# Validate and modify a path based on certain conditions
+check_scriptpath_is_set() {
+    local local_cust_path=$1          # The custom path to use if provided
+    local -n local_script=${2:-nil}   # The array where scriptpath is stored
+    local local_dir=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"
+
+    # Modify local_cust_path if its directory is the current directory
+    if [[ "$(dirname "$local_cust_path")" == "." ]]; then
+        local_cust_path="$local_dir$local_cust_path"
+    fi
+
+    check_path "$local_cust_path"
+    #return:
+    local_script[config]="$local_cust_path"
+}
+
 # Function to extract configuration single values one by one
 extract_config_values() {
     local -n config_ref=$1
@@ -23,15 +39,6 @@ extract_config_values() {
             unset ${config_ref[$name_element]}
         fi
     done
-}
-
-# Function to extract all entries in associated arrays with name_option
-extract_options_values() {
-    local name_option="$1"
-#echo "ksksk""${script_[config]}"   ??? weg alles
-    #echo $(xml_grep $name_option "${script_[config]}" --text_only | sed -e 's#n#ÖÖÖÖÖ#g')
-    #echo $(xml_grep $name_option "${script_[config]}" --text_only )
-    xml_grep $name_option "${script_[config]}" --text_only
 }
 
 # Function to replace defined placeholder from config-file into string
@@ -64,7 +71,7 @@ replace_placeholders() {
 read_identifier(){
     local -n option_ref=$1
 
-    option_ref=($(extract_options_values 'id'))
+    option_ref=($(xml_grep "id" "${script_[config]}" --text_only))
 
     # Check if found entries are integers
     for element in "${option_ref[@]}"; do
@@ -80,7 +87,7 @@ read_options() {
     local -n option_ref=$1
 
     if [[ -n ${option_ref[0]} ]]; then
-        option_ref=($(extract_options_values ${option_ref[0]}))
+        option_ref=($(xml_grep "${option_ref[0]}" "${script_[config]}" --text_only))
         replace_placeholders option_ref
     fi
 }
@@ -132,15 +139,27 @@ read_alloptions() {
 
 # Reading configuration completed
 done_configuration() {
-[[ $is_test_mode -gt 0 ]] && echo "Konfiguration eingelesen! >$cmdNr<\n"
-[[ $is_test_mode -gt 0 ]] && echo "Starte....${script_[name]} (Testversion) ......\n"
-[[ $is_test_mode -gt 0 ]] && display_options 5
-[[ $is_test_mode -gt 0 ]] && message_notification "Configuration \n'$1'\nloaded!.      >$cmdNr<\n" 1 &
+[[ $is_test_mode -gt 0 ]] && echo "(t)Konfiguration eingelesen! >$cmdNr<\n"
+[[ $is_test_mode -gt 0 ]] && echo "(t)Starte....${script_[name]} (Testversion) ......\n"
+[[ $is_test_mode -gt 0 ]] && display_options 6
+[[ $is_test_mode -gt 0 ]] && message_notification "(t)Configuration \n'$1'\nloaded!.      >$cmdNr<\n" 1 &
 }
 
 # Reading configuration file
 read_configuration() {
-    script_[config]=$(check_path_is_set $config_stdname $1)
+    # Exit if local_std_path is empty
+    if [[ -z "$config_stdname" ]]; then
+        echo "Error: Standard path is not set." >&2
+        exit 1
+    else
+        check_scriptpath_is_set ${1:-$config_stdname} script_
+    fi
+
+    if [[ -z "$(cd -- "$(dirname -- "$(readlink -f "${script_[config]}")")" &> /dev/null && pwd)" ]]; then
+        xfile="${script_[dir]}${script_[config]}"
+    else
+        xfile="${script_[config]}"
+    fi
 
     [[ $is_test_mode -gt 0 ]] && message_notification "Reading configuration file \n\n${script_[config]}." 1
 
@@ -171,13 +190,4 @@ is_test_mode=1
 
 read_configuration "/home/stefan/perl/Bakki-the-stickv1.2beta/config_2408.xml"
 
-read_alloptions
-
-done_configuration
-
 exit 0
-
-
-### junk
-
-tr '\n' ' ' # the easiest?

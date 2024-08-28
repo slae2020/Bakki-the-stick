@@ -34,11 +34,9 @@ display_options () {
         6)
         echo .
         echo "Extracted IDs: ${id[@]}"
-        echo "Extracted Names: ${opti1[@]}"
-        echo "Extracted 1    : ${opti2[@]}"
-        echo "Extracted 2   s: ${opti3[@]}"
-        echo "Extracted 3   s: ${opti4[@]}"
-        echo "Extracted 4   s: ${opti5[@]}"
+        declare -p opti1 #echo "Extracted Names: ${opti1[@]}"
+        declare -p opti2 #echo "Extracted 1    : ${opti2[@]}"
+        declare -p opti3  #echo "Extracted 2   s: ${opti3[@]}"
         ;;
     esac
     echo .

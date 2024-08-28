@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
+# Define a placeholder space character for use in a configuration file
+declare placeholder_space="#x0020"
+
+# Define standardnames
+declare config_stdname="config.xml"
+
 # Define general parameters for config-file
 declare -A script_=(
     [dir]=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"
     [name]=$(basename "$(readlink -f "$0")" .sh)
     [config]="$config_stdname"
 )
-
-# Define a placeholder space character for use in a configuration file
-declare placeholder_space="#x0020"
-
-# Define standardnames
-declare config_stdname="config.xml"
 
 ###############################
 # Declarations for Bakki only #
