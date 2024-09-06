@@ -64,7 +64,20 @@ message_notification() {
     local -i time=$2
 
     if [[ $time -gt 0 ]]; then
+		[[ $is_test_mode -gt 0 ]] && echo "(t) $messenger_top_text\n "" $txt" || \
         zenity --notification  --height $dialog_height --width $dialog_width --window-icon="info" --text="$messenger_top_text\n""$txt" --timeout=$time &
+    fi
+}
+
+# Test and exit-message if not zero
+message_test_exit() {
+    local result=$1
+    local txt=$2
+    local err=$3
+
+    if [[ $result -ne 0 ]]; then
+        [[ $is_test_mode -gt 0 ]] && echo "(t) $txt '$result?' $err" || \
+        message_exit "$txt '$result?' " $err
     fi
 }
 
@@ -162,3 +175,20 @@ echo ">"$(ask_to_choose "" "2" "" testi )"<"
 #ask_to_continue "weiter?" 21
 
 exit 0
+
+
+#perl transaltion
+#!/usr/bin/perl
+
+# Error-window & exit with error number; default-value 1 when missing; wait for response except for err==0
+sub message_exit {
+    my ($txt, $err) = @_;
+    $err = 1 unless defined $err;
+    $txt =~ s/:\s*/:\n/g;
+
+    if ($err > 0) {
+        system("zenity --error --width $mwidth --title \"$messenger_top_text\" --text \"$txt ($err)\"");
+    }
+    exit $err;
+    #return $err;
+}

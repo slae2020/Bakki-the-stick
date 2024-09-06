@@ -4,69 +4,67 @@ source declarations.sh
 source checker.sh
 source tester.sh
 
+# Define standardnames
+declare config_stdname="config.xml"
+
+# Define general parameters for config-file
+declare -A script_=(
+    [dir]=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"
+    [name]=$(basename "$(readlink -f "$0")" .sh)
+    [config]="$config_stdname"
+)
+
 #init_messenger
 messenger_top_text=${script_[name]^^*}
-
-# Validate and modify a path based on certain conditions
-check_scriptpath_is_set() {
-    local local_cust_path=$1          # The custom path to use if provided
-    local -n local_script=${2:-nil}   # The array where scriptpath is stored
-    local local_dir=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"
-
-    # Modify local_cust_path if its directory is the current directory
-    if [[ "$(dirname "$local_cust_path")" == "." ]]; then
-        local_cust_path="$local_dir$local_cust_path"
-    fi
-
-    check_path "$local_cust_path"
-    #return:
-    local_script[config]="$local_cust_path"
-}
 
 # Function to extract configuration single values one by one
 extract_config_values() {
     local -n config_ref=$1
+    local -n config_def=$2
 
     for name_element in "${!config_ref[@]}"; do
         # Get only values from conf-file when empty
         if [[ -z ${config_ref["$name_element"]} ]]; then
             config_ref["$name_element"]=$(xml_grep "$name_element" "${script_[config]}" --text_only 2>/dev/null)
         fi
+        # Check if still empty use std-value
+        if [[ -z ${config_ref["$name_element"]} ]];  then
+            config_ref["$name_element"]="${config_def["$name_element"]}"
+        fi
         # Warn if xml-tag is missing or empty
-        if [[ -z "${config_ref[$name_element]}" ]]; then
-            [[ $is_test_mode -gt 0 ]] && echo "Warning (8) for '$name_element': no value from config file \n${script_[config]}" || \
+        if [[ -z "${config_ref[$name_element]}" && ! $name_element =~ "\." ]]; then
+            [[ $is_test_mode -gt 0 ]] && echo "(t) Warning (8) for '$name_element': no value from config file \n${script_[config]}" || \
             message_exit "Warning for '$name_element': no value from config file \n${script_[config]}" 8
             unset ${config_ref[$name_element]}
         fi
     done
 }
 
-# Function to replace defined placeholder from config-file into string
-replace_placeholder_strg() {
-    local input=$1
-    local placeholder=$2
-    local replacement=$3
-    if [[ $input =~ [$placeholder] ]]; then
-        input=$(echo "$input" | sed "s|$placeholder|$replacement|g")
+# Function to replace all occurrencies
+replace_all_strings() {
+    local fullstring=$1
+    local old_substrg=$2
+    local new_substrg=$3
+    if [[ $fullstring =~ [$old_substrg] ]]; then
+        fullstring=$(echo "$fullstring" | sed "s|$old_substrg|$new_substrg|g")
     fi
-    echo $input
+    echo $fullstring
 }
 
 # Function to replace specific placeholders after reading
 replace_placeholders() {
     local -n ref=$1
     for ((k = 0; k < ${#id[@]}; k++)); do
-        ref[k]=$(replace_placeholder_strg "${ref[k]}" "~" "${config_elements[home_directory]}")
-        ref[k]=$(replace_placeholder_strg "${ref[k]}" "\$homeVerz" "${config_elements[home_directory]}")
-        ref[k]=$(replace_placeholder_strg "${ref[k]}" "\$stickort" "${config_elements[storage_location]}")
-        ref[k]=$(replace_placeholder_strg "${ref[k]}" "\$stdpath" "${config_elements[standard_path]}")
-        ref[k]=$(replace_placeholder_strg "${ref[k]}" "\$remotepath" "${config_elements[remote_path]}")
-        ref[k]=$(replace_placeholder_strg "${ref[k]}" "$placeholder_space" " ")
+        for ((j = ${#attribution[@]} - 1; j >= 0; j--)); do
+            ref[k]=$(replace_all_strings "${ref[k]}" "\$${attribution[j]}" "${config_elements[${attribution[j]}]}")
+            if [[ ${ref[k]} =~ "\\." ]]; then
+                unset ref[k] #=' '
+            fi
+        done
     done
 }
 
 # Functions to start
-
 # Extract IDs
 read_identifier(){
     local -n option_ref=$1
@@ -83,58 +81,40 @@ read_identifier(){
 }
 
 # Extract options like names, paths etc.
-read_options() {
-    local -n option_ref=$1
-
-    if [[ -n ${option_ref[0]} ]]; then
-        option_ref=($(xml_grep "${option_ref[0]}" "${script_[config]}" --text_only))
-        replace_placeholders option_ref
-    fi
-}
-
-# Extract elements <>''
-count_options() {
-    local -n option_ref=$1
-    count=$2
-
-    if [[ -n ${option_ref[0]} ]]; then
-        count=$(( $count + ${#option_ref[@]} ))
-    fi
-    echo $count
-}
-
-# Extract id, names, paths etc.
 read_alloptions() {
+    local cfg_name=$1
     local -i num_options=0
-    rate=0
 
+    # Subfunction for single optis
+    read_options() {
+        local -n option_ref=$1
+        if [ -z "${option_ref[0]}" ]; then
+            unset option_ref[0]
+        else
+            option_ref=($(xml_grep "${option_ref[0]}" "${script_[config]}" --text_only))
+            replace_placeholders option_ref
+        fi
+        num_options=$(( $num_options + ${#option_ref[@]} ))
+}
+
+    # start read all options
     read_identifier id
-    rate=$(( $(count_options id 0) ))
-    if [ $rate -eq 0 ]; then
-        message_exit "Missing data: Config-file '$1' has no item." 44
+    num_ids=${#id[@]}
+    if [[ $num_ids -eq 0 ]]; then
+        message_test_exit 1 "Missing data: Config-file '$cfg_name' has no item." 44
     fi
 
     read_options opti1
-    num_options=$(( $(count_options opti1 $num_options) ))
     read_options opti2
-    num_options=$(( $(count_options opti2 $num_options) ))
     read_options opti3
-    num_options=$(( $(count_options opti3 $num_options) ))
     read_options opti4
-    num_options=$(( $(count_options opti4 $num_options) ))
     read_options opti5
-    num_options=$(( $(count_options opti5 $num_options) ))
     read_options opti6
-    num_options=$(( $(count_options opti6 $num_options) ))
     read_options opti7
-    num_options=$(( $(count_options opti7 $num_options) ))
 
 
-    # Check correct count of options
-    rate=$(( $num_options % $num_elements ))
-    if [ $rate -ne 0 ]; then
-        message_exit "Missing data: Config-file '$1' with '$num_options MOD $num_elements' item(s) is not well-filled." 45
-    fi
+    message_test_exit "$(( $num_options % $num_elements ))" \
+                      "Missing data: Config-file '$cfg_name' with '$num_options MOD $num_elements' item(s) is not well-filled." 45
 }
 
 # Reading configuration completed
@@ -161,25 +141,28 @@ read_configuration() {
         xfile="${script_[config]}"
     fi
 
-    [[ $is_test_mode -gt 0 ]] && message_notification "Reading configuration file \n\n${script_[config]}." 1
+    [[ $is_test_mode -gt 0 ]] && echo "(t) start"
+    message_notification "Reading configuration file \n\n${script_[config]}." 1
 
     # Call function to extract values
-    extract_config_values config_elements
+    extract_config_values config_elements config_std
 
-    # Replace placeholders from config
-    config_elements[menue_strg]=$(replace_placeholder_strg "${config_elements[menue_strg]}" "\$version" "${config_elements[version]}")
-    config_elements[menue_strg]=$(replace_placeholder_strg "${config_elements[menue_strg]}" "\$verstxt" "${config_elements[version_strg]}")
-
-    # Ensure the editor-prog is set, defaulting to "gedit" if not provided & checking existence
-    [[ -z "${config_elements[editor_prog]}" ]] && config_elements[editor_prog]="${config_elements[editor_prog]:-gedit}"
-    check_prog "${config_elements[editor_prog]}"
-    check_prog "${config_elements[prog_strg]}"
+    ## Replace placeholders from config & Ensure the progs ares set
+    for ((i = 0; i < ${#attribution[@]}; i++)); do
+        if [[ ${attribution[i]} =~ "dialog_" ]]; then
+            config_elements[${attribution[i]}]=$(replace_all_strings "${config_elements[${attribution[i]}]}" "\$version1" "${config_elements[version1]}") #????
+            config_elements[${attribution[i]}]=$(replace_all_strings "${config_elements[${attribution[i]}]}" "\$version2" "${config_elements[version2]}")
+        fi
+        if [[ ${attribution[i]} =~ "_prog" ]]; then
+            check_prog "${config_elements[${attribution[i]}]}"
+        fi
+    done
 
     read_alloptions ${script_[config]}
 
     done_configuration ${script_[config]}
 
-    [[ $is_test_mode -gt 0 ]] && echo ${script_[config]}
+    [[ $is_test_mode -gt 0 ]] && echo "(t)"${script_[config]}
 }
 
 return

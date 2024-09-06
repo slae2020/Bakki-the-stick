@@ -1,36 +1,44 @@
 #!/usr/bin/env bash
 
-# Define a placeholder space character for use in a configuration file
-declare placeholder_space="#x0020"
-
-# Define standardnames
-declare config_stdname="config.xml"
-
-# Define general parameters for config-file
-declare -A script_=(
-    [dir]=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"
-    [name]=$(basename "$(readlink -f "$0")" .sh)
-    [config]="$config_stdname"
-)
+# Define vars for config-file, not changeable
+declare -A config_elements
+declare -A config_std
 
 ###############################
 # Declarations for Bakki only #
 ###############################
 
-# Define associative arrays with desired elements & first allocation
-declare -A config_elements=(
-    [version]=''
-    [version_strg]=''
-    [lang]='en-GB'
-    [title_strg]=''
-    [menue_strg]=''
-    [config_strg]=''
-    [editor_prog]=''
-    [prog_strg]='meld'
-    [home_directory]=''
-    [storage_location]=''
-    [standard_path]=''
-    [remote_path]=''
+# Define filling for config-xml-file <attribution></attribution>
+# [nn]='attribution|standard-value'
+# '\.' for empty attrib.   ???
+declare -a attribution=(
+    [0]='space'
+
+    # general
+    [1]='version1'
+    [2]='version2'
+    [3]='lang|de-DE'
+
+    # for dialogues
+    [4]='dialog_title'
+    [5]='dialog_menue'
+    [6]='dialog_column1'
+    [7]='dialog_config'
+    [8]='\.'
+    [9]='\.'
+
+    # progs for setting & main
+    [10]='std_prog|soffice'
+    [11]='name_stdprg|Office'
+    [12]='editor_prog|gedit'
+    [13]='\.'
+    [14]='\.'
+
+    # directories
+    [15]='home_dir|~'
+    [16]='std_dir'
+    [17]='usb_dir'
+    [18]='remote_dir|'
 )
 
 # Define parameter of sync-group-elements
@@ -50,9 +58,24 @@ declare -i cmdNr=0 && unset cmdNr
 declare selection=""
 declare selectedIndex=""
 
-#return
+# Init config elements with standard-values
+for ((k = 0; k < ${#attribution[@]}; k++)); do
+    config_elements[${attribution[k]%%|*}]=""
+    # Fill standard-values
+    if [[ ${attribution[k]} =~ "|" ]]; then
+        config_std[${attribution[k]%%|*}]=${attribution[k]##*|}
+        attribution[k]=${attribution[k]%%|*}
+    else
+        config_std[${attribution[k]%%|*}]=""
+    fi
+done
 
+return
 
+#declare -p config_elements
+#declare -p config_std
+
+exit 0
 
 #### junk
 
