@@ -5,7 +5,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 
 	<general>
 		<space> </space>
-		<version1 date="2024-08-07">1.2a</version1>
+		<version1 date="2024-09-08">1.6beta</version1>
 		<version2> Anpassung offi</version2>
 		<lang>de-DE</lang>
 
@@ -20,7 +20,6 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 	</general>
 	<directories>
 		<home_dir>/home/stefan</home_dir>
-		<storage_location>/media/stefan</storage_location>
 		<std_dir>/slae_kim</std_dir>
 		<usb_dir>/media/stefan</usb_dir>
 		<remote_dir>/mnt/iserv_laettig/Files</remote_dir>
@@ -37,32 +36,32 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<name>SLAE01</name>
 		<dir1>~/slae_kim</dir1>
 <!--
-		<dir2>$stickort/SLAE01$stdpath</dir2>
+		<dir2>$usb_dir/SLAE01$std_dir</dir2>
 -->
-<dir2>$stickort/slae02</dir2>
+<dir2>$usb_dir/slae02</dir2>
 		</ordpaar>
 
 		<ordpaar>
 		<id>01</id>
-		<name>iserv#x0020USR</name>
-		<dir1>~$stdpath/usr</dir1>
-		<dir2>$remotepath/usr</dir2>
+		<name>iserv$spaceUSR</name>
+		<dir1>~$std_dir/usr</dir1>
+		<dir2>$remote_dir/usr</dir2>
 		</ordpaar>
 		<ordpaar>
 		<id>02</id>
-		<name>iserv#x0020unt</name>
+		<name>iserv$spaceunt</name>
 		<dir1>~/slae_unt</dir1>
-		<dir2>$remotepath/unt</dir2>
+		<dir2>$remote_dir/unt</dir2>
 		</ordpaar>
 		<ordpaar>
 		<id>03</id>
-		<name>iserv#x0020Ausdruck</name>
+		<name>iserv$spaceAusdruck</name>
 		<dir1>~/slae_kim/ausdruck</dir1>
-		<dir2>$remotepath/ausdruck</dir2>
+		<dir2>$remote_dir/ausdruck</dir2>
 		</ordpaar>
 		<ordpaar>
 		<id>04</id>
-		<name>Shuffle#x0020nach#x0020unten</name>
+		<name>Shuffle$spacenach$spaceunten</name>
 		<dir1>~/slae_kim/abf</dir1>
 		<dir2>~/slae_unt</dir2>
 		</ordpaar>
@@ -71,14 +70,14 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<id>05</id>
 		<name>SLAE03</name>
 		<dir1>~/slae_kim</dir1>
-		<dir2>$stickort/SLAE03$stdpath</dir2>
+		<dir2>$usb_dir/SLAE03$std_dir</dir2>
 		</ordpaar>
 		<ordpaar>
 
 		<id>06</id>
 		<name>Keepass</name>
 		<dir1>~/.door3</dir1>
-		<dir2>$remotepath/kp/myt</dir2>
+		<dir2>$remote_dir/kp/myt</dir2>
 		</ordpaar>
 
 		<ordpaar>
@@ -98,8 +97,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<ordpaar>
 		<id>09</id>
 		<name>rsync_push_td</name>
-		<dir1>#x0020</dir1>
-		<dir2>#x0020</dir2>
+		<dir1>$space</dir1>
+		<dir2>$space</dir2>
 		</ordpaar>
 	</vergleiche>
 

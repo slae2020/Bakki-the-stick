@@ -71,7 +71,9 @@ case $selection in
         eval $command_to_execute & >/dev/null 2>&1
         ;;
     ${opti1[$selectedIndex]})
+
         check_path "${opti2[$selectedIndex]}" "${opti1[$selectedIndex]}"
+teststop 51        
         check_path "${opti3[$selectedIndex]}" "${opti1[$selectedIndex]}"
         command_to_execute="${config_elements[prog_strg]} ${opti2[$selectedIndex]} ${opti3[$selectedIndex]}"
         eval $command_to_execute & >/dev/null 2>&1
