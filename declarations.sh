@@ -10,7 +10,7 @@ declare -A config_std
 
 # Define filling for config-xml-file <attribution></attribution>
 # [nn]='attribution|standard-value'
-# '\.' for empty attrib.   ???
+# '\.' for empty attrib.
 declare -a attribution=(
     [0]='space'
 
@@ -35,7 +35,7 @@ declare -a attribution=(
     [14]='\.'
 
     # directories
-    [15]='home_dir|~'
+    [15]='home_dir|'$HOME
     [16]='std_dir'
     [17]='usb_dir'
     [18]='remote_dir|'
@@ -78,22 +78,3 @@ return
 exit 0
 
 #### junk
-
-#declare -A optionKW=(
-    #[name]=''
-    #[param]=''
-    #[dir1]=''
-    #[dir2]=''
-#)
-
-
-#declare -a sync_name     #oppti1
-#declare -a sync_param
-#declare -a sync_dir1    #optti2
-#declare -a sync_dir2    #oppti3
-
-declare -a template_name
-declare -a template_prog
-declare -a template_param
-declare -a template_path
-declare -a template_file

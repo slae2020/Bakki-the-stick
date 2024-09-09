@@ -22,7 +22,6 @@ check_path() {
         message_exit "Config-Error: Path \n'$path'\n is missing or not readable." 21
         exit
     fi
-    #echo "felix"
 }
 
 # Function to check if a USB stick is present
@@ -82,6 +81,7 @@ check_scriptpath_is_set() {
 
 return
 
-#check_usb "/media/slaekim" "SLAE77"
 
-check_mount "/mnt/iserv_laettig/Files"
+check_usb "/media/stefan/SLAE01/slaekim" "SLAE01"
+
+#check_mount "/mnt/iserv_laettig/Files"

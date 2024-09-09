@@ -54,6 +54,6 @@ display_options () {
 
 # Routine zum exit mit
 teststop() {
-    echo "teststop "$1
+    echo "(t) teststop "$1
     message_exit "Teststopp hier. $1" 0
 }

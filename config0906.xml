@@ -19,8 +19,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<name_stdprg>Just meld</name_stdprg>
 	</general>
 	<directories>
-		<home_dir>/home/stefan</home_dir>
-		<std_dir>/slae_kim</std_dir>
+		<home_dir></home_dir>
+		<std_dir>/slaekim</std_dir>
 		<usb_dir>/media/stefan</usb_dir>
 		<remote_dir>/mnt/iserv_laettig/Files</remote_dir>
 	</directories>
@@ -35,10 +35,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<id>00</id>
 		<name>SLAE01</name>
 		<dir1>~/slae_kim</dir1>
-<!--
 		<dir2>$usb_dir/SLAE01$std_dir</dir2>
--->
-<dir2>$usb_dir/slae02</dir2>
+
 		</ordpaar>
 
 		<ordpaar>
