@@ -58,10 +58,13 @@ replace_placeholders() {
 		ref[k]=$(replace_all_strings "${ref[k]}" "~" "${config_elements[home_dir]}")
         for ((j = ${#attribution[@]} - 1; j >= 0; j--)); do
             ref[k]=$(replace_all_strings "${ref[k]}" "\$${attribution[j]}" "${config_elements[${attribution[j]}]}")
-            if [[ ${ref[k]} =~ "\\." ]]; then
+            if [[ -z ${ref[k]}  ]]; then
                 unset ref[k]
             fi
         done
+        if [[ -n ${ref[k]}  ]]; then
+            ref[k]=$(replace_all_strings "${ref[k]}" "\$empty" " ")
+        fi
     done
 }
 
@@ -113,14 +116,14 @@ read_alloptions() {
     read_options opti6
     read_options opti7
 
-    message_test_exit "$(( $num_options % $num_elements ))" \
-                      "Missing data: Config-file '$cfg_name' with '$num_options MOD $num_elements' item(s) is not well-filled." 45
+    message_test_exit "$(( ${#opti1[@]} * $num_elements - $num_options))" \
+                      "Missing data: Config-file '$cfg_name' is not well-filled." 45
 }
 
 # Reading configuration completed
 done_configuration() {
 [[ $is_test_mode -gt 0 ]] && echo "(t) File "$1" cmdNr-->$cmdNr<\n"
-[[ $is_test_mode -gt 0 ]] && display_options 3
+[[ $is_test_mode -gt 0 ]] && display_options 6
 
     message_notification "Reading configuration file done!" 1
 }

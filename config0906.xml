@@ -29,7 +29,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 <!--
 		id immer integer
 		keine Lücken in name & id
-		immer $space minimum für nix/leer 
+		immer $empty minimum für nix/leer 
 -->
 		<ordpaar>
 		<id>00</id>
@@ -81,8 +81,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<ordpaar>
 		<id>07</id>
 		<name>KIMocloud_td</name>
-		<dir1>???</dir1>
-		<dir2>???</dir2>
+		<dir1>$empty</dir1>
+		<dir2>$empty</dir2>
 		</ordpaar>
 
 		<ordpaar>
@@ -95,8 +95,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<ordpaar>
 		<id>09</id>
 		<name>rsync_push_td</name>
-		<dir1>$space</dir1>
-		<dir2>$space</dir2>
+		<dir1>$empty</dir1>
+		<dir2>$empty</dir2>
 		</ordpaar>
 	</vergleiche>
 
