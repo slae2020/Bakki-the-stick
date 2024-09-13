@@ -18,9 +18,10 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<std_prog>meld</std_prog>
 		<name_stdprg>Just meld</name_stdprg>
 	</general>
+	
 	<directories>
 		<home_dir></home_dir>
-		<std_dir>/slaekim</std_dir>
+		<std_dir>/slae_kim</std_dir>
 		<usb_dir>/media/stefan</usb_dir>
 		<remote_dir>/mnt/iserv_laettig/Files</remote_dir>
 	</directories>
@@ -36,7 +37,6 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<name>SLAE01</name>
 		<dir1>~/slae_kim</dir1>
 		<dir2>$usb_dir/SLAE01$std_dir</dir2>
-
 		</ordpaar>
 
 		<ordpaar>
@@ -45,18 +45,21 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<dir1>~$std_dir/usr</dir1>
 		<dir2>$remote_dir/usr</dir2>
 		</ordpaar>
+		
 		<ordpaar>
 		<id>02</id>
 		<name>iserv$spaceunt</name>
 		<dir1>~/slae_unt</dir1>
 		<dir2>$remote_dir/unt</dir2>
 		</ordpaar>
+		
 		<ordpaar>
 		<id>03</id>
 		<name>iserv$spaceAusdruck</name>
 		<dir1>~/slae_kim/ausdruck</dir1>
 		<dir2>$remote_dir/ausdruck</dir2>
 		</ordpaar>
+		
 		<ordpaar>
 		<id>04</id>
 		<name>Shuffle$spacenach$spaceunten</name>
@@ -79,25 +82,26 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		</ordpaar>
 
 		<ordpaar>
-		<id>07</id>
-		<name>KIMocloud_td</name>
-		<dir1>$empty</dir1>
-		<dir2>$empty</dir2>
-		</ordpaar>
-
-		<ordpaar>
 		<id>08</id>
-		<name>BK_dokumente_td</name>
-		<dir1>~/dokumente</dir1>
-		<dir2>afp://stefan@willem.local/francois3/dokumente</dir2>
+		<name>Literatur:-->SLAE01/slae_lit</name>
+		<dir1>~$std_dir/.lit   </dir1>
+		<dir2>$usb_dir/SLAE01/slae_lit</dir2>
 		</ordpaar>
-
+		
 		<ordpaar>
 		<id>09</id>
-		<name>rsync_push_td</name>
-		<dir1>$empty</dir1>
-		<dir2>$empty</dir2>
+		<name>Medien:-->SLAE01/slae_media</name>
+		<dir1>~$std_dir/.media</dir1>
+		<dir2>$usb_dir/SLAE01/slae_media</dir2>
 		</ordpaar>
+
+		<ordpaar>
+		<id>15</id>
+		<name>BK$spacedokumente</name>
+		<dir1>~/dokumente</dir1>
+		<dir2>/mnt/NAS_francois/dokumente</dir2>
+		</ordpaar>
+
 	</vergleiche>
 
 </bk-script_options>

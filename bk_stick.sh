@@ -11,7 +11,7 @@ while getopts ':c:e:n:vh' OPTION; do
         e) config_elements[editor_prog]=${OPTARG} ;;
         n) cmdNr=${OPTARG} ;;
         v) is_test_mode=0 ;;
-        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-v] [-h] \n" 11; exit ;;
+        ?|h) message_exit "Usage: $(basename $0) [-c Konfiguration.xml] [-e Editor] [-n id] [-v] [-h] \n" 11 ;;
     esac
 done
 
