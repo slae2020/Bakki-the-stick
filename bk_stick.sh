@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+cd /home/stefan/prog/bakki/Bakki-the-stick/
 source configreader.sh
 
 is_test_mode=01
