@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-cd /home/stefan/prog/bakki/Bakki-the-stick/
+cd $(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd) # for the subs
 source configreader.sh
 
-is_test_mode=01
+is_test_mode=01  #???
 
 # Start of script execution; # Reading arguments from commandline # -c "$cfile" -e geany -n automatisch# -v verbose -h help
 while getopts ':c:e:n:vh' OPTION; do

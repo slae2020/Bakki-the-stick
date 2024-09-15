@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ## "./%f"     -m 02 -s bk_stick  -c /home/stefan/prog/bakki/Bakki-the-stick/config0906.xml
+#"./%f"   -v -m 02 -s bk_stick  -c ~/prog/bakki/Bakki-the-stick/config0906.xml
 
 # Path_vari [0] path  [1] name
 declare -a SCRIPT_=""
@@ -8,32 +9,32 @@ declare -a PROG_=""
 declare -a CONFIG_=""
 
 split_path() {
-	path=$1
-	local -n file=$2
-	
-	if [[ $path =~ "/" ]]; then
-		file[0]=${path%\/*}"/"
-	fi
-	file[1]=${path##*\/}
+    path=$1
+    local -n file=$2
+
+    if [[ $path =~ "/" ]]; then
+        file[0]=${path%\/*}"/"
+    fi
+    file[1]=${path##*\/}
 }
 
 echo_exit() {
-	echo "$1"
-	exit "$2"
+    echo "$1"
+    exit "$2"
 }
 
-# Start of script execution; 
+# Start of script execution;
 # Reading arguments from commandline #- s script(.sh) ==PROG -c "$cfile"==CONFIG  -m automatische -v verbose -h help
-SCRIPT_[0]=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"   # [1] ???
-SCRIPT_[1]=$(basename "$(readlink -f "$0")" ) 
+SCRIPT_[0]=$(cd -- "$(dirname -- "$(readlink -f "$0")")" &> /dev/null && pwd)"/"
+SCRIPT_[1]=$(basename "$(readlink -f "$0")" )
 while getopts ':c:m:s:vh' OPTION; do
     case "$OPTION" in
-        s) 	split_path "${OPTARG}" PROG_ ;;
-        c) 	split_path "${OPTARG}" CONFIG_ ;;
-        m) 	list=${OPTARG} ;;
-        v) 	verbose="on" ;;
+        s)  split_path "${OPTARG}" PROG_ ;;
+        c)  split_path "${OPTARG}" CONFIG_ ;;
+        m)  list=${OPTARG} ;;
+        v)  verbose="on" ;;
         ?|h)
-			echo_exit "Usage: $(basename $0) [-s script(.sh)] [-c Konfiguration.xml] [-m id-id-id] [-v] [-h] \n" 11 ;;  #??
+            echo_exit "Usage: $(basename $0) [-s script(.sh)] [-c Konfiguration.xml] [-m id-id-id] [-v] [-h] \n" 11 ;;  #??
     esac
 done
 
@@ -42,13 +43,11 @@ if [[ ! $PROG_[1] =~ (.sh)$ ]]; then
     PROG_[1]+=".sh"
 fi
 if [[ -z $PROG_[0] ]]; then
-	PROG_[0]=${SCRIPT_[0]}
+    PROG_[0]=${SCRIPT_[0]}
 fi
 if [[ -z $CONFIG_[0] ]]; then
-	CONFIG_[0]=${SCRIPT_[0]}
+    CONFIG_[0]=${SCRIPT_[0]}
 fi
-
-
 
 # Check if the script exists and is executable
 if [[ ! -f "${PROG_[0]}${PROG_[1]}" ]]; then
@@ -67,19 +66,19 @@ done
 
 # Mainloop
 for ((i = 0; i < ${#myvar[@]}; i++)); do
-	if ! [[ "${myvar[i]}" =~ ^[0-9]+$ ]]; then
-		message_notification "Config-Error: '-m ${myvar[i]}' has to be an integer!" 1
+    if ! [[ "${myvar[i]}" =~ ^[0-9]+$ ]]; then
+        message_notification "Config-Error: '-m ${myvar[i]}' has to be an integer!" 1
     else
-		command_to_execute="${PROG_[0]}${PROG_[1]} -n ${myvar[i]}"
-		if [[ -n $verbose ]]; then
-			command_to_execute+=" -v "
-		fi
-		if [[ -n ${CONFIG_[1]} ]]; then
-			command_to_execute+=" -c ${CONFIG_[0]}${CONFIG_[1]}"
-		fi
-	# Execution!
+        command_to_execute="${PROG_[0]}${PROG_[1]} -n ${myvar[i]}"
+        if [[ -n $verbose ]]; then
+            command_to_execute+=" -v "
+        fi
+        if [[ -n ${CONFIG_[1]} ]]; then
+            command_to_execute+=" -c ${CONFIG_[0]}${CONFIG_[1]}"
+        fi
+    # Execution!
 #echo .
-#echo "$command_to_execute" 
+#echo "$command_to_execute"
     eval "$command_to_execute" &
     fi
 done

@@ -35,8 +35,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<ordpaar>
 		<id>00</id>
 		<name>SLAE01</name>
-		<dir1>~/slae_kim</dir1>
-		<dir2>$usb_dir/SLAE01$std_dir</dir2>
+		<dir1>~$std_dir</dir1>
+		<dir2>$usb_dir/SLAE01/slaekim</dir2>
 		</ordpaar>
 
 		<ordpaar>
@@ -56,22 +56,22 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<ordpaar>
 		<id>03</id>
 		<name>iserv$spaceAusdruck</name>
-		<dir1>~/slae_kim/ausdruck</dir1>
+		<dir1>~$std_dir/ausdruck</dir1>
 		<dir2>$remote_dir/ausdruck</dir2>
 		</ordpaar>
 		
 		<ordpaar>
 		<id>04</id>
 		<name>Shuffle$spacenach$spaceunten</name>
-		<dir1>~/slae_kim/abf</dir1>
+		<dir1>~$std_dir/abf</dir1>
 		<dir2>~/slae_unt</dir2>
 		</ordpaar>
 
 		<ordpaar>
 		<id>05</id>
 		<name>SLAE03</name>
-		<dir1>~/slae_kim</dir1>
-		<dir2>$usb_dir/SLAE03$std_dir</dir2>
+		<dir1>~$std_dir</dir1>
+		<dir2>$usb_dir/SLAE03/slaekim</dir2>
 		</ordpaar>
 		<ordpaar>
 
